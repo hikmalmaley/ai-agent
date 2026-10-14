@@ -82,7 +82,7 @@ details.sys summary{cursor:pointer; color:var(--muted); font-size:13px; padding:
 .agent-card .who{display:flex; align-items:center; gap:12px; margin-bottom:10px}
 .avatar{width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center;
   font-weight:700; font-size:15px; color:#fff; flex:0 0 42px}
-/* ---------- Virtual office ---------- */
+/* ---------- maley office ---------- */
 #view-office{height:100%}
 #officeWrap{position:relative; height:calc(100vh - 98px); min-height:420px; border-radius:var(--radius);
   overflow:hidden; border:1px solid var(--border); background:#0b0e13}
@@ -117,7 +117,7 @@ details.sys summary{cursor:pointer; color:var(--muted); font-size:13px; padding:
 <aside id="sidebar">
   <div class="brand"><span class="dot"></span><div><b>Mission Control</b><small>pusat kendali tim AI</small></div></div>
   <nav>
-    <button data-view="office" class="active"><span class="ico">🖥️</span><span class="lbl">Virtual Office</span></button>
+    <button data-view="office" class="active"><span class="ico">🖥️</span><span class="lbl">Maley Office</span></button>
     <button data-view="agents"><span class="ico">🤖</span><span class="lbl">Agent Overview</span></button>
     <button data-view="queue"><span class="ico">📥</span><span class="lbl">Task Queue</span><span class="badge" id="navQueueBadge" style="display:none">0</span></button>
     <button data-view="system"><span class="ico">📊</span><span class="lbl">System Metrics</span></button>
@@ -131,7 +131,7 @@ details.sys summary{cursor:pointer; color:var(--muted); font-size:13px; padding:
 </aside>
 <div id="main">
   <header id="topbar">
-    <h1 id="tbTitle">Virtual Office</h1>
+    <h1 id="tbTitle">maley Office</h1>
     <div class="tb-right">
       <span class="pill gray" id="tunnelBadge">TUNNEL …</span>
       <span id="clock">—</span>
@@ -179,7 +179,7 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let S = null;
 
-const TITLES = { office:'Virtual Office', agents:'Agent Overview', queue:'Task Queue', system:'System Metrics', vps:'VPS Status', schedules:'Tugas Terjadwal', tokens:'Token Status', fleet:'Agent Fleet', log:'Real-Time Log' };
+const TITLES = { office:'maley Office', agents:'Agent Overview', queue:'Task Queue', system:'System Metrics', vps:'VPS Status', schedules:'Tugas Terjadwal', tokens:'Token Status', fleet:'Agent Fleet', log:'Real-Time Log' };
 document.querySelectorAll('#sidebar nav button').forEach(b => b.addEventListener('click', () => showView(b.dataset.view)));
 function showView(name){
   document.querySelectorAll('#sidebar nav button').forEach(x => x.classList.toggle('active', x.dataset.view === name));
@@ -417,7 +417,7 @@ $('#dispatchBtn').addEventListener('click', async () => {
 poll();
 setInterval(poll, 3000);
 
-/* ================= VIRTUAL OFFICE (Three.js r128, vendor lokal) ================= */
+/* ================= maley OFFICE (Three.js r128, vendor lokal) ================= */
 (function(){
 if (!window.THREE){
   document.getElementById('officeHint').textContent = 'Three.js gagal dimuat (vendor/three.min.js tidak ditemukan).';
