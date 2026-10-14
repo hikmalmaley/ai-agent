@@ -197,6 +197,14 @@ function statusPill(st){
   if (st === 'paused') return '<span class="pill amber">PAUSED</span>';
   return '<span class="pill gray">IDLE</span>';
 }
+const AGENT_DISPLAY_NAMES = Object.freeze({
+  muse: 'azul',
+  udin: 'sulz',
+  aris: 'maley',
+});
+function displayAgentName(id){
+  return AGENT_DISPLAY_NAMES[id] || id;
+}
 function fmtDateID(iso){
   if (!iso) return '—';
   try {
@@ -278,8 +286,8 @@ function renderAgents(){
   $('#agentsGrid').innerHTML = S.agents.map(a => `
     <div class="card agent-card">
       <div class="who">
-        <div class="avatar" style="background:${esc(a.color)}55; border:1px solid ${esc(a.color)}">${esc(a.id.slice(0,2).toUpperCase())}</div>
-        <div><b>${esc(a.id)}</b><div class="sub">${esc(a.role)}</div></div>
+        <div class="avatar" style="background:${esc(a.color)}55; border:1px solid ${esc(a.color)}">${esc(displayAgentName(a.id).slice(0,2).toUpperCase())}</div>
+        <div><b>${esc(displayAgentName(a.id))}</b><div class="sub">${esc(a.role)}</div></div>
         <div style="margin-left:auto">${statusPill(a.status)}</div>
       </div>
       ${a.task ? `<div class="kv"><span class="k">Task aktif</span><span class="mono">${esc(a.task.title)}</span></div>
@@ -296,7 +304,7 @@ function renderQueue(){
   el.innerHTML = S.queue.map(q => `
     <div class="sched-item">
       <span class="pill ${q.status === 'queued' ? 'blue' : 'gray'}">${esc(q.status)}</span>
-      <div style="flex:1; min-width:180px"><div>${esc(q.prompt)}</div><div class="sub">${esc(q.agent)} • ${esc(fmtDateID(q.ts))}</div></div>
+      <div style="flex:1; min-width:180px"><div>${esc(q.prompt)}</div><div class="sub">${esc(displayAgentName(q.agent))} • ${esc(fmtDateID(q.ts))}</div></div>
     </div>`).join('');
 }
 document.querySelectorAll('[data-q]').forEach(b => b.addEventListener('click', async () => {
@@ -381,17 +389,22 @@ function renderTokens(){
 function renderFleet(){
   $('#fleetGrid').innerHTML = S.roster.map(r => `
     <div class="card"><div class="who" style="display:flex; gap:12px; align-items:center; margin-bottom:8px">
-      <div class="avatar" style="background:${esc(r.color)}55; border:1px solid ${esc(r.color)}">${esc(r.id.slice(0,2).toUpperCase())}</div>
-      <div><b>${esc(r.id)}</b><div class="sub">${esc(r.role)}</div></div></div>
+      <div class="avatar" style="background:${esc(r.color)}55; border:1px solid ${esc(r.color)}">${esc(displayAgentName(r.id).slice(0,2).toUpperCase())}</div>
+      <div><b>${esc(displayAgentName(r.id))}</b><div class="sub">${esc(r.role)}</div></div></div>
       <div class="sub" style="margin-bottom:8px">${esc(r.desc)}</div>
       <ul style="padding-left:18px; color:var(--muted); font-size:13px">${r.caps.map(c => `<li>${esc(c)}</li>`).join('')}</ul>
     </div>`).join('');
 }
 
+function displayAgentNamesInText(text){
+  return String(text).replace(/\b(muse|udin|aris)\b/g, id => displayAgentName(id));
+}
+
 function renderLog(){
   const p = $('#logPre');
   const atBottom = p.scrollHeight - p.scrollTop - p.clientHeight < 40;
-  p.textContent = (S.log && S.log.length ? S.log : ['(belum ada event di tasks.jsonl)']).join('\n');
+  p.textContent = (S.log && S.log.length ? S.log : ['(belum ada event di tasks.jsonl)'])
+    .map(displayAgentNamesInText).join('\n');
   if (atBottom) p.scrollTop = p.scrollHeight;
 }
 
@@ -685,14 +698,14 @@ function makeRobot(cfg){
     kb.add(new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.035, 0.2), mat(0x141821, .5, .3)));
     const keys = new THREE.Mesh(new THREE.PlaneGeometry(0.43, 0.17), new THREE.MeshBasicMaterial({ map: makeKeysTexture() }));
     keys.rotation.x = -Math.PI/2; keys.position.y = 0.019; kb.add(keys);
-  } else { /* muse: dasi aksen */
+  } else {
     const tie = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.3, 0.03), accMat);
     tie.position.set(0, 0.9, 0.195); inner.add(tie);
   }
   const ring = new THREE.Mesh(new THREE.CircleGeometry(0.44, 28),
     new THREE.MeshBasicMaterial({ color: 0x6b7280, transparent: true, opacity: 0.5, side: THREE.DoubleSide }));
   ring.rotation.x = -Math.PI/2; ring.position.y = 0.02; g.add(ring); rec.ring = ring;
-  g.add(makeLabel(cfg.id, cfg.role));
+  g.add(makeLabel(displayAgentName(cfg.id), cfg.role));
   g.position.set(0, 0, 6);
   scene.add(g);
   robots[cfg.id] = rec;
