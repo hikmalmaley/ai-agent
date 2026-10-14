@@ -483,6 +483,32 @@ box(0.24, 5.5, 14, M(0x0e1219, 1, 0), 8.6, 2.75, 0);           // dinding kanan
   box(0.08, 3.1, 0.08, fr, 0.6, 3.0, -4.44);
 })();
 
+/* ----- Jam dinding Bandung (real-time WIB) ----- */
+const [clockC, clockX] = mkCanvas(512, 128);
+const clockTex = new THREE.CanvasTexture(clockC);
+function drawWallClock(){
+  const now = new Date();
+  const wib = new Date(now.getTime() + (7*60 + now.getTimezoneOffset())*60000);
+  const p = n => String(n).padStart(2,'0');
+  const dateStr = `${p(wib.getDate())}/${p(wib.getMonth()+1)}/${String(wib.getFullYear()).slice(2)}`;
+  const timeStr = `${p(wib.getHours())}:${p(wib.getMinutes())}:${p(wib.getSeconds())}`;
+  clockX.fillStyle = 'rgba(8,10,14,0.88)'; clockX.fillRect(0, 0, 512, 128);
+  clockX.strokeStyle = 'rgba(255,217,138,0.35)'; clockX.lineWidth = 3; clockX.strokeRect(3, 3, 506, 122);
+  clockX.textAlign = 'center';
+  clockX.fillStyle = '#ffd98a'; clockX.font = 'bold 40px Inter, sans-serif';
+  clockX.fillText('BANDUNG', 256, 52);
+  clockX.fillStyle = '#ffffff'; clockX.font = 'bold 36px ui-monospace, Menlo, monospace';
+  clockX.fillText(`${dateStr}  ${timeStr}`, 256, 102);
+  clockTex.needsUpdate = true;
+}
+drawWallClock();
+const wallClock = new THREE.Mesh(
+  new THREE.PlaneGeometry(2.9, 0.725),
+  new THREE.MeshBasicMaterial({ map: clockTex })
+);
+wallClock.position.set(0.6, 5.02, -4.45);
+scene.add(wallClock);
+
 /* ----- Meja + kursi ----- */
 const deskMat = M(0x2b3242, .55, .25);
 box(5.4, 0.1, 1.9, deskMat, 0, 0.8, -2.4);
@@ -897,7 +923,7 @@ window.__office = Office;
 
 /* ----- Loop ----- */
 const clk = new THREE.Clock();
-let codeAcc = 0, chartAcc = 0;
+let codeAcc = 0, chartAcc = 0, clockAcc = 0;
 function tick(){
   requestAnimationFrame(tick);
   const dt = Math.min(clk.getDelta(), 0.05), t = clk.elapsedTime;
@@ -905,6 +931,7 @@ function tick(){
   if (!visible) return;
   animateRobots(dt, t);
   codeAcc += dt; if (codeAcc > 0.4){ codeAcc = 0; codeOff += 17; drawCode(); }
+  clockAcc += dt; if (clockAcc > 1){ clockAcc = 0; drawWallClock(); }
   chartAcc += dt; if (chartAcc > 0.2){
     chartAcc = 0;
     const last = chData[chData.length-1];
