@@ -117,7 +117,7 @@ details.sys summary{cursor:pointer; color:var(--muted); font-size:13px; padding:
 <aside id="sidebar">
   <div class="brand"><span class="dot"></span><div><b>Mission Control</b><small>pusat kendali tim AI</small></div></div>
   <nav>
-    <button data-view="office" class="active"><span class="ico">🖥️</span><span class="lbl">Maley Office</span></button>
+    <button data-view="office" class="active"><span class="ico">🖥️</span><span class="lbl">Virtual Office</span></button>
     <button data-view="agents"><span class="ico">🤖</span><span class="lbl">Agent Overview</span></button>
     <button data-view="queue"><span class="ico">📥</span><span class="lbl">Task Queue</span><span class="badge" id="navQueueBadge" style="display:none">0</span></button>
     <button data-view="system"><span class="ico">📊</span><span class="lbl">System Metrics</span></button>
@@ -131,7 +131,7 @@ details.sys summary{cursor:pointer; color:var(--muted); font-size:13px; padding:
 </aside>
 <div id="main">
   <header id="topbar">
-    <h1 id="tbTitle">Maley Office</h1>
+    <h1 id="tbTitle">Virtual Office</h1>
     <div class="tb-right">
       <span class="pill gray" id="tunnelBadge">TUNNEL …</span>
       <span id="clock">—</span>
@@ -179,7 +179,7 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let S = null;
 
-const TITLES = { office:'Maley Office', agents:'Agent Overview', queue:'Task Queue', system:'System Metrics', vps:'VPS Status', schedules:'Tugas Terjadwal', tokens:'Token Status', fleet:'Agent Fleet', log:'Real-Time Log' };
+const TITLES = { office:'Virtual Office', agents:'Agent Overview', queue:'Task Queue', system:'System Metrics', vps:'VPS Status', schedules:'Tugas Terjadwal', tokens:'Token Status', fleet:'Agent Fleet', log:'Real-Time Log' };
 document.querySelectorAll('#sidebar nav button').forEach(b => b.addEventListener('click', () => showView(b.dataset.view)));
 function showView(name){
   document.querySelectorAll('#sidebar nav button').forEach(x => x.classList.toggle('active', x.dataset.view === name));
@@ -483,108 +483,6 @@ box(0.24, 5.5, 14, M(0x0e1219, 1, 0), 8.6, 2.75, 0);           // dinding kanan
   box(0.08, 3.1, 0.08, fr, 0.6, 3.0, -4.44);
 })();
 
-/* ----- Hiasan dinding Bitcoin dan trading ----- */
-function makeWallArtTexture(kind){
-  const [canvas, ctx] = mkCanvas(320, 220);
-  const bg = ctx.createLinearGradient(0, 0, 320, 220);
-  bg.addColorStop(0, '#18202c'); bg.addColorStop(1, '#0c1119');
-  ctx.fillStyle = bg; ctx.fillRect(0, 0, 320, 220);
-  ctx.strokeStyle = 'rgba(157,177,255,.12)'; ctx.lineWidth = 1;
-  for (let x = 24; x < 320; x += 32){ ctx.beginPath(); ctx.moveTo(x, 42); ctx.lineTo(x, 190); ctx.stroke(); }
-  for (let y = 58; y < 200; y += 28){ ctx.beginPath(); ctx.moveTo(16, y); ctx.lineTo(304, y); ctx.stroke(); }
-
-  if (kind === 'bitcoin'){
-    ctx.textAlign = 'center'; ctx.fillStyle = '#ffd18a';
-    ctx.font = 'bold 16px Inter, sans-serif'; ctx.fillText('BITCOIN  /  BTC', 160, 30);
-    const coin = ctx.createLinearGradient(104, 55, 216, 165);
-    coin.addColorStop(0, '#ffc66e'); coin.addColorStop(1, '#e78313');
-    ctx.beginPath(); ctx.arc(160, 112, 53, 0, Math.PI * 2); ctx.fillStyle = coin; ctx.fill();
-    ctx.strokeStyle = 'rgba(255,245,220,.65)'; ctx.lineWidth = 3; ctx.stroke();
-    ctx.fillStyle = '#fff0d1'; ctx.font = 'bold 76px Arial, sans-serif'; ctx.fillText('B', 160, 139);
-    ctx.strokeStyle = '#fff0d1'; ctx.lineWidth = 4;
-    [143, 177].forEach(x => { ctx.beginPath(); ctx.moveTo(x, 63); ctx.lineTo(x, 161); ctx.stroke(); });
-    ctx.fillStyle = '#c3cad6'; ctx.font = '13px Inter, sans-serif';
-    ctx.fillText('DECENTRALIZED  •  SINCE 2009', 160, 194);
-  } else {
-    ctx.textAlign = 'left'; ctx.fillStyle = '#e9ebf1';
-    ctx.font = 'bold 16px Inter, sans-serif'; ctx.fillText('BTC / USD', 20, 29);
-    ctx.textAlign = 'right'; ctx.fillStyle = '#34d399';
-    ctx.font = '12px Inter, sans-serif'; ctx.fillText('TRADING', 300, 28);
-    const candles = [
-      [38,152,18,38,1],[76,136,22,50,-1],[114,119,18,42,1],
-      [152,126,22,58,1],[190,91,20,48,-1],[228,74,22,53,1],[268,61,19,46,1]
-    ];
-    candles.forEach(([x,y,w,h,up]) => {
-      const color = up > 0 ? '#34d399' : '#f87171';
-      ctx.strokeStyle = color; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(x + w/2, y - 13); ctx.lineTo(x + w/2, y + h + 13); ctx.stroke();
-      ctx.fillStyle = color; ctx.fillRect(x, y, w, h);
-    });
-    ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 2; ctx.beginPath();
-    [[30,158],[72,144],[110,130],[151,137],[190,105],[229,91],[287,69]]
-      .forEach(([x,y], i) => i ? ctx.lineTo(x,y) : ctx.moveTo(x,y));
-    ctx.stroke();
-    ctx.textAlign = 'left'; ctx.fillStyle = '#9aa3b2';
-    ctx.font = '11px Inter, sans-serif'; ctx.fillText('MARKET CHART  •  DECORATIVE', 20, 207);
-  }
-  return new THREE.CanvasTexture(canvas);
-}
-function addWallArt(x, kind){
-  const group = new THREE.Group();
-  group.position.set(x, 3.15, -4.39);
-  const backing = new THREE.Mesh(new THREE.BoxGeometry(2.12, 1.5, 0.12), M(0x252b35, .48, .55));
-  backing.castShadow = true; group.add(backing);
-  const art = new THREE.Mesh(new THREE.PlaneGeometry(1.94, 1.32),
-    new THREE.MeshBasicMaterial({ map: makeWallArtTexture(kind) }));
-  art.position.z = 0.066; group.add(art);
-  const trim = M(0xb27a38, .42, .65);
-  const rails = [
-    [2.12, .06, .05, 0, .72], [2.12, .06, .05, 0, -.72],
-    [.06, 1.38, .05, -1.03, 0], [.06, 1.38, .05, 1.03, 0]
-  ];
-  rails.forEach(([w,h,d,rx,ry]) => {
-    const rail = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), trim);
-    rail.position.set(rx, ry, .07); rail.castShadow = true; group.add(rail);
-  });
-  scene.add(group);
-}
-addWallArt(-5.8, 'trading');
-addWallArt(6.45, 'bitcoin');
-
-/* ----- Jam lokal Bandung ----- */
-const [clockCanvas, clockCtx] = mkCanvas(640, 100);
-const clockTexture = new THREE.CanvasTexture(clockCanvas);
-const clockBoard = new THREE.Group();
-clockBoard.position.set(0.6, 5.04, -4.39);
-const clockBacking = new THREE.Mesh(new THREE.BoxGeometry(4.8, .66, .12), M(0x252b35, .48, .55));
-clockBacking.castShadow = true; clockBoard.add(clockBacking);
-const clockFace = new THREE.Mesh(new THREE.PlaneGeometry(4.62, .52),
-  new THREE.MeshBasicMaterial({ map: clockTexture }));
-clockFace.position.z = .066; clockBoard.add(clockFace);
-scene.add(clockBoard);
-let lastClockLabel = '';
-function updateBandungClock(){
-  const now = new Date();
-  const date = new Intl.DateTimeFormat('en-US', {
-    timeZone:'Asia/Jakarta', month:'2-digit', day:'2-digit', year:'numeric'
-  }).format(now);
-  const time = new Intl.DateTimeFormat('en-US', {
-    timeZone:'Asia/Jakarta', hour:'numeric', minute:'2-digit', hour12:true
-  }).format(now);
-  const label = `${date} ${time} WIB`;
-  if (label === lastClockLabel) return;
-  lastClockLabel = label;
-  clockCtx.fillStyle = '#0c1119'; clockCtx.fillRect(0, 0, 640, 100);
-  clockCtx.textAlign = 'center';
-  clockCtx.fillStyle = '#9db1ff'; clockCtx.font = 'bold 19px Inter, sans-serif';
-  clockCtx.fillText('BANDUNG', 320, 34);
-  clockCtx.fillStyle = '#f3f4f6'; clockCtx.font = 'bold 29px Inter, sans-serif';
-  clockCtx.fillText(label, 320, 74);
-  clockTexture.needsUpdate = true;
-}
-updateBandungClock();
-setInterval(updateBandungClock, 1000);
-
 /* ----- Meja + kursi ----- */
 const deskMat = M(0x2b3242, .55, .25);
 box(5.4, 0.1, 1.9, deskMat, 0, 0.8, -2.4);
@@ -714,8 +612,11 @@ function makeRobot(cfg){
   const inner = new THREE.Group(); g.add(inner);
   const mat = (c,r,m) => new THREE.MeshStandardMaterial({ color:c, roughness:r==null?0.65:r, metalness:m==null?0.25:m });
   const bodyMat = mat(0x2b3242), accMat = mat(colInt, 0.45, 0.5);
-  const rec = { id: cfg.id, g, inner, blink: 1+Math.random()*4, phase: Math.random()*6.28, hop: -1, seen: false, lastDone: null, sitK: 0, workT: 0, status: 'idle', patrol: null,
+  const rec = { id: cfg.id, g, inner, blink: 1+Math.random()*4, phase: Math.random()*6.28, hop: -1, seen: false, lastDone: null, sitK: 0, workT: 0, status: 'idle',
     target: { pos: new THREE.Vector3(), rotY: 0, sitting: false } };
+  rec.wanderT = 2 + Math.random()*4;
+  rec.wanderTarget = new THREE.Vector3((Math.random()-0.5)*7, 0, 1.5 + Math.random()*2.5);
+  rec.walking = false;
   function leg(x){
     const hip = new THREE.Group(); hip.position.set(x, 0.52, 0); inner.add(hip);
     const th = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.10, 0.5, 12), bodyMat);
@@ -800,7 +701,7 @@ function makeRobot(cfg){
     kb.add(new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.035, 0.2), mat(0x141821, .5, .3)));
     const keys = new THREE.Mesh(new THREE.PlaneGeometry(0.43, 0.17), new THREE.MeshBasicMaterial({ map: makeKeysTexture() }));
     keys.rotation.x = -Math.PI/2; keys.position.y = 0.019; kb.add(keys);
-  } else {
+  } else { /* muse: dasi aksen */
     const tie = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.3, 0.03), accMat);
     tie.position.set(0, 0.9, 0.195); inner.add(tie);
   }
@@ -819,33 +720,44 @@ const clamp01 = v => Math.max(0, Math.min(1, v));
 function animateRobots(dt, t){
   for (const id in robots){
     const r = robots[id];
-    if (r.patrol && r.status === 'idle' && t >= r.patrol.nextAt){
-      const x = Math.random() < 0.5 ? r.patrol.minX : r.patrol.maxX;
-      const z = r.patrol.minZ + Math.random() * (r.patrol.maxZ - r.patrol.minZ);
-      const dx = x - r.g.position.x, dz = z - r.g.position.z;
-      r.target.pos.set(x, 0, z);
-      r.target.rotY = Math.atan2(dx, dz);
-      r.patrol.nextAt = t + 2.2 + Math.random() * 1.4;
-    }
     const k = 1 - Math.exp(-3.2*dt);
+    // Mondar-mandir: robot yang berdiri (tanpa tugas) jalan santai biar hidup
+    if (!r.target.sitting){
+      r.wanderT -= dt;
+      const dxw = r.wanderTarget.x - r.g.position.x;
+      const dzw = r.wanderTarget.z - r.g.position.z;
+      const dw = Math.hypot(dxw, dzw);
+      if (r.wanderT <= 0 || dw < 0.4){
+        r.wanderTarget.set(-3.8 + Math.random()*7.6, 0, 1.2 + Math.random()*3.2);
+        r.wanderT = 5 + Math.random()*7;
+      }
+      r.target.pos.copy(r.wanderTarget);
+      if (dw > 0.3) r.target.rotY = Math.atan2(dxw, dzw);
+      r.walking = dw > 0.35;
+    } else {
+      r.walking = false;
+    }
     r.g.position.lerp(r.target.pos, k);
     let dy = r.target.rotY - r.g.rotation.y;
     dy = Math.atan2(Math.sin(dy), Math.cos(dy));
     r.g.rotation.y += dy * k;
     r.sitK = clamp01(r.sitK + ((r.target.sitting ? 1 : 0) - r.sitK) * Math.min(1, dt*4));
-    const walking = !!r.patrol && r.status === 'idle' && !r.target.sitting
-      && r.g.position.distanceTo(r.target.pos) > 0.12;
-    const gait = walking ? Math.sin(t * 8 + r.phase) : 0;
     const bend = -1.35 * r.sitK;
-    r.legL.rotation.x += (bend + gait * 0.42 - r.legL.rotation.x) * k;
-    r.legR.rotation.x += (bend - gait * 0.42 - r.legR.rotation.x) * k;
-    let hopY = 0;
+    let legL = bend, legR = bend, walkBob = 0;
+    if (r.walking){
+      const sw = Math.sin(t*7 + r.phase);
+      legL = bend + sw*0.55; legR = bend - sw*0.55;
+      walkBob = Math.abs(sw)*0.05;
+    }
+    r.legL.rotation.x += (legL - r.legL.rotation.x) * k;
+    r.legR.rotation.x += (legR - r.legR.rotation.x) * k;
+    let hopY = walkBob;
     if (r.hop >= 0){
       r.hop += dt;
       const hk = r.hop / 0.9;
       if (hk >= 1) r.hop = -1; else hopY = Math.sin(hk * Math.PI) * 0.5;
     }
-    r.inner.position.y = r.sitK * 0.07 + hopY + (walking ? Math.abs(gait) * 0.025 : 0);
+    r.inner.position.y = r.sitK * 0.07 + hopY;
     r.inner.rotation.z = Math.sin(t*1.3 + r.phase) * 0.035;
     r.inner.rotation.y = Math.sin(t*0.7 + r.phase) * 0.05;
     r.blink -= dt;
@@ -863,7 +775,7 @@ function animateRobots(dt, t){
       else if (id === 'coding-agent-02'){ aLx = -1.0 + Math.sin(wt*12)*0.14; aRx = -1.0 + Math.sin(wt*12+Math.PI)*0.14; hX = 0.22; }
       else { aLx = -0.85 + Math.sin(wt*9)*0.16; aRx = -0.85 + Math.sin(wt*9+Math.PI)*0.16; hX = 0.08; hY = Math.sin(wt*0.8)*0.15; }
     } else if (frozen){ aLx = 0.15; aRx = 0.15; hX = 0.28; }
-    else if (walking){ aLx = gait * 0.2; aRx = -gait * 0.2; }
+    else if (r.walking){ const asw = Math.sin(t*7 + r.phase)*0.35; aLx = asw; aRx = -asw; hX = 0.06; }
     if (r.hop >= 0){ const he = Math.sin(Math.min(1, r.hop/0.9) * Math.PI); aLz = 0.14 + 2.4*he; aRz = -0.14 - 2.4*he; }
     const ak = 1 - Math.exp(-8*dt);
     r.armL.pivot.rotation.x += (aLx - r.armL.pivot.rotation.x) * ak;
@@ -967,7 +879,6 @@ const Office = {
     const seated = st.agents.filter(a => a.task), standing = st.agents.filter(a => !a.task);
     seated.forEach((a, i) => {
       const r = robots[a.id]; if (!r) return;
-      r.patrol = null;
       r.target.pos.set(SEAT_X[i % SEAT_X.length], 0, SEAT_Z);
       r.target.rotY = Math.PI; r.target.sitting = true; r.status = a.status;
       r.ring.material.color.setHex(a.status === 'paused' ? 0xfbbf24 : 0x34d399);
@@ -975,19 +886,8 @@ const Office = {
     });
     standing.forEach((a, i) => {
       const r = robots[a.id]; if (!r) return;
-      const homeX = BACK_X[i % BACK_X.length];
-      r.target.sitting = false; r.status = a.status;
-      if (a.status === 'idle'){
-        if (!r.patrol){
-          r.patrol = { minX: homeX - 0.42, maxX: homeX + 0.42, minZ: 2.05, maxZ: 3.72, nextAt: 0 };
-          r.target.pos.set(homeX, 0, BACK_Z);
-          r.target.rotY = 0;
-        }
-      } else {
-        r.patrol = null;
-        r.target.pos.set(homeX, 0, BACK_Z);
-        r.target.rotY = 0;
-      }
+      r.target.pos.set(BACK_X[i % BACK_X.length], 0, BACK_Z);
+      r.target.rotY = 0; r.target.sitting = false; r.status = a.status;
       r.ring.material.color.setHex(a.status === 'paused' ? 0xfbbf24 : 0x6b7280);
       noteDone(r, a);
     });
