@@ -75,3 +75,6 @@ sebagai `maley`. ID lama tetap dipakai saat membaca snapshot dan mengirim antrea
 atau status pause agar sesuai dengan collector yang berjalan di server asal.
 Query skema Supabase di `supabase-schema.sql` tidak menetapkan nama agent; untuk
 mengganti ID agent yang sebenarnya, ubah juga konfigurasi/source collector.
+
+Di Virtual Office, agent yang idle berjalan mondar-mandir di area belakang kursi.
+Agent yang sedang bekerja tetap menuju meja, sedangkan agent yang di-pause diam.

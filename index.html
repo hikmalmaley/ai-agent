@@ -612,7 +612,7 @@ function makeRobot(cfg){
   const inner = new THREE.Group(); g.add(inner);
   const mat = (c,r,m) => new THREE.MeshStandardMaterial({ color:c, roughness:r==null?0.65:r, metalness:m==null?0.25:m });
   const bodyMat = mat(0x2b3242), accMat = mat(colInt, 0.45, 0.5);
-  const rec = { id: cfg.id, g, inner, blink: 1+Math.random()*4, phase: Math.random()*6.28, hop: -1, seen: false, lastDone: null, sitK: 0, workT: 0, status: 'idle',
+  const rec = { id: cfg.id, g, inner, blink: 1+Math.random()*4, phase: Math.random()*6.28, hop: -1, seen: false, lastDone: null, sitK: 0, workT: 0, status: 'idle', patrol: null,
     target: { pos: new THREE.Vector3(), rotY: 0, sitting: false } };
   function leg(x){
     const hip = new THREE.Group(); hip.position.set(x, 0.52, 0); inner.add(hip);
@@ -717,22 +717,33 @@ const clamp01 = v => Math.max(0, Math.min(1, v));
 function animateRobots(dt, t){
   for (const id in robots){
     const r = robots[id];
+    if (r.patrol && r.status === 'idle' && t >= r.patrol.nextAt){
+      const x = Math.random() < 0.5 ? r.patrol.minX : r.patrol.maxX;
+      const z = r.patrol.minZ + Math.random() * (r.patrol.maxZ - r.patrol.minZ);
+      const dx = x - r.g.position.x, dz = z - r.g.position.z;
+      r.target.pos.set(x, 0, z);
+      r.target.rotY = Math.atan2(dx, dz);
+      r.patrol.nextAt = t + 2.2 + Math.random() * 1.4;
+    }
     const k = 1 - Math.exp(-3.2*dt);
     r.g.position.lerp(r.target.pos, k);
     let dy = r.target.rotY - r.g.rotation.y;
     dy = Math.atan2(Math.sin(dy), Math.cos(dy));
     r.g.rotation.y += dy * k;
     r.sitK = clamp01(r.sitK + ((r.target.sitting ? 1 : 0) - r.sitK) * Math.min(1, dt*4));
+    const walking = !!r.patrol && r.status === 'idle' && !r.target.sitting
+      && r.g.position.distanceTo(r.target.pos) > 0.12;
+    const gait = walking ? Math.sin(t * 8 + r.phase) : 0;
     const bend = -1.35 * r.sitK;
-    r.legL.rotation.x += (bend - r.legL.rotation.x) * k;
-    r.legR.rotation.x += (bend - r.legR.rotation.x) * k;
+    r.legL.rotation.x += (bend + gait * 0.42 - r.legL.rotation.x) * k;
+    r.legR.rotation.x += (bend - gait * 0.42 - r.legR.rotation.x) * k;
     let hopY = 0;
     if (r.hop >= 0){
       r.hop += dt;
       const hk = r.hop / 0.9;
       if (hk >= 1) r.hop = -1; else hopY = Math.sin(hk * Math.PI) * 0.5;
     }
-    r.inner.position.y = r.sitK * 0.07 + hopY;
+    r.inner.position.y = r.sitK * 0.07 + hopY + (walking ? Math.abs(gait) * 0.025 : 0);
     r.inner.rotation.z = Math.sin(t*1.3 + r.phase) * 0.035;
     r.inner.rotation.y = Math.sin(t*0.7 + r.phase) * 0.05;
     r.blink -= dt;
@@ -750,6 +761,7 @@ function animateRobots(dt, t){
       else if (id === 'coding-agent-02'){ aLx = -1.0 + Math.sin(wt*12)*0.14; aRx = -1.0 + Math.sin(wt*12+Math.PI)*0.14; hX = 0.22; }
       else { aLx = -0.85 + Math.sin(wt*9)*0.16; aRx = -0.85 + Math.sin(wt*9+Math.PI)*0.16; hX = 0.08; hY = Math.sin(wt*0.8)*0.15; }
     } else if (frozen){ aLx = 0.15; aRx = 0.15; hX = 0.28; }
+    else if (walking){ aLx = gait * 0.2; aRx = -gait * 0.2; }
     if (r.hop >= 0){ const he = Math.sin(Math.min(1, r.hop/0.9) * Math.PI); aLz = 0.14 + 2.4*he; aRz = -0.14 - 2.4*he; }
     const ak = 1 - Math.exp(-8*dt);
     r.armL.pivot.rotation.x += (aLx - r.armL.pivot.rotation.x) * ak;
@@ -853,6 +865,7 @@ const Office = {
     const seated = st.agents.filter(a => a.task), standing = st.agents.filter(a => !a.task);
     seated.forEach((a, i) => {
       const r = robots[a.id]; if (!r) return;
+      r.patrol = null;
       r.target.pos.set(SEAT_X[i % SEAT_X.length], 0, SEAT_Z);
       r.target.rotY = Math.PI; r.target.sitting = true; r.status = a.status;
       r.ring.material.color.setHex(a.status === 'paused' ? 0xfbbf24 : 0x34d399);
@@ -860,8 +873,19 @@ const Office = {
     });
     standing.forEach((a, i) => {
       const r = robots[a.id]; if (!r) return;
-      r.target.pos.set(BACK_X[i % BACK_X.length], 0, BACK_Z);
-      r.target.rotY = 0; r.target.sitting = false; r.status = a.status;
+      const homeX = BACK_X[i % BACK_X.length];
+      r.target.sitting = false; r.status = a.status;
+      if (a.status === 'idle'){
+        if (!r.patrol){
+          r.patrol = { minX: homeX - 0.42, maxX: homeX + 0.42, minZ: 2.05, maxZ: 3.72, nextAt: 0 };
+          r.target.pos.set(homeX, 0, BACK_Z);
+          r.target.rotY = 0;
+        }
+      } else {
+        r.patrol = null;
+        r.target.pos.set(homeX, 0, BACK_Z);
+        r.target.rotY = 0;
+      }
       r.ring.material.color.setHex(a.status === 'paused' ? 0xfbbf24 : 0x6b7280);
       noteDone(r, a);
     });
