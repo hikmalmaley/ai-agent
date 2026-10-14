@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mission Control</title>
+<style>
+:root{
+  --bg:#0a0c10; --panel:#101319; --card:#151a22; --card2:#181e28;
+  --border:rgba(255,255,255,.07); --text:#e9ebf1; --muted:#8f96a3;
+  --accent:#5b7cff; --green:#34d399; --red:#f87171; --amber:#fbbf24; --cyan:#22d3ee;
+  --radius:16px; --shadow:0 8px 28px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box; margin:0; padding:0}
+html,body{height:100%}
+body{background:var(--bg); color:var(--text); font-family:Inter,-apple-system,"Segoe UI",Roboto,sans-serif;
+  display:flex; font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased}
+/* ---------- Sidebar ---------- */
+#sidebar{width:236px; flex:0 0 236px; background:var(--panel); border-right:1px solid var(--border);
+  display:flex; flex-direction:column; padding:18px 12px; gap:6px; z-index:50}
+.brand{display:flex; align-items:center; gap:10px; padding:4px 10px 14px}
+.brand .dot{width:10px; height:10px; border-radius:50%; background:var(--green); box-shadow:0 0 10px rgba(52,211,153,.7)}
+.brand b{font-size:15px; letter-spacing:.02em}
+.brand small{display:block; color:var(--muted); font-weight:400; font-size:11px}
+#sidebar nav{display:flex; flex-direction:column; gap:2px; overflow-y:auto}
+#sidebar nav button{background:none; border:0; color:var(--muted); text-align:left; padding:9px 12px;
+  border-radius:10px; cursor:pointer; font-size:13.5px; display:flex; align-items:center; gap:10px; width:100%}
+#sidebar nav button:hover{background:rgba(255,255,255,.05); color:var(--text)}
+#sidebar nav button.active{background:rgba(91,124,255,.14); color:var(--text)}
+#sidebar nav button .ico{width:20px; text-align:center; flex:0 0 20px}
+.badge{margin-left:auto; background:var(--accent); color:#fff; font-size:11px; min-width:20px; height:20px;
+  border-radius:999px; display:inline-flex; align-items:center; justify-content:center; padding:0 6px; font-weight:600}
+.side-foot{margin-top:auto; padding:10px; color:var(--muted); font-size:11px; border-top:1px solid var(--border)}
+/* ---------- Main / topbar ---------- */
+#main{flex:1; display:flex; flex-direction:column; min-width:0}
+#topbar{height:58px; flex:0 0 58px; display:flex; align-items:center; gap:12px; padding:0 20px;
+  border-bottom:1px solid var(--border); background:var(--panel)}
+#topbar h1{font-size:15px; font-weight:600}
+.tb-right{margin-left:auto; display:flex; align-items:center; gap:10px}
+#clock{color:var(--muted); font-size:12.5px; font-variant-numeric:tabular-nums}
+#views{flex:1; overflow-y:auto; padding:20px; position:relative}
+.view{display:none}
+.view.active{display:block; animation:fade .18s ease}
+@keyframes fade{from{opacity:0; transform:translateY(4px)} to{opacity:1; transform:none}}
+/* ---------- Cards & UI ---------- */
+.card{background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+  box-shadow:var(--shadow); padding:18px; margin-bottom:16px}
+.grid{display:grid; gap:16px; grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.h-label{font-size:11px; text-transform:uppercase; letter-spacing:.09em; color:var(--muted); margin-bottom:12px; font-weight:600}
+.pill{display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:600; padding:3px 10px; border-radius:999px; white-space:nowrap}
+.pill.green{background:rgba(52,211,153,.13); color:var(--green)}
+.pill.gray{background:rgba(143,150,163,.15); color:var(--muted)}
+.pill.amber{background:rgba(251,191,36,.13); color:var(--amber)}
+.pill.red{background:rgba(248,113,113,.13); color:var(--red)}
+.pill.blue{background:rgba(91,124,255,.14); color:#9db1ff}
+.btn{background:var(--card2); color:var(--text); border:1px solid var(--border); border-radius:10px;
+  padding:8px 14px; cursor:pointer; font-size:13px; font-weight:500}
+.btn:hover{border-color:rgba(255,255,255,.2)}
+.btn.ghost{background:transparent}
+.btn.warn{border-color:rgba(251,191,36,.4); color:var(--amber)}
+.btn.go{border-color:rgba(52,211,153,.4); color:var(--green)}
+.btn:disabled{opacity:.45; cursor:default}
+.row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+input[type=text]{background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:10px;
+  padding:9px 12px; font-size:13px; flex:1; min-width:200px; outline:none}
+input[type=text]:focus{border-color:var(--accent)}
+.bar{height:8px; background:rgba(255,255,255,.07); border-radius:99px; overflow:hidden; margin-top:8px}
+.bar>i{display:block; height:100%; background:var(--accent); border-radius:99px; transition:width .4s}
+.bar>i.red{background:var(--red)} .bar>i.green{background:var(--green)}
+.kv{display:flex; justify-content:space-between; gap:8px; padding:6px 0; border-bottom:1px dashed rgba(255,255,255,.05); font-size:13px}
+.kv:last-child{border-bottom:0}
+.kv .k{color:var(--muted)}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px}
+.sub{color:var(--muted); font-size:12px}
+a{color:#9db1ff; text-decoration:none} a:hover{text-decoration:underline}
+pre#logPre{background:#0c0f14; border:1px solid var(--border); border-radius:var(--radius); padding:16px;
+  font-family:ui-monospace,Menlo,Consolas,monospace; font-size:12px; line-height:1.7; overflow-y:auto; max-height:70vh; white-space:pre-wrap}
+details.sys{margin-top:8px}
+details.sys summary{cursor:pointer; color:var(--muted); font-size:13px; padding:8px 0}
+.sched-item{display:flex; gap:10px; align-items:center; padding:10px 0; border-bottom:1px dashed rgba(255,255,255,.06); flex-wrap:wrap}
+.sched-item:last-child{border-bottom:0}
+.agent-card .who{display:flex; align-items:center; gap:12px; margin-bottom:10px}
+.avatar{width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:15px; color:#fff; flex:0 0 42px}
+/* ---------- Virtual office ---------- */
+#view-office{height:100%}
+#officeWrap{position:relative; height:calc(100vh - 98px); min-height:420px; border-radius:var(--radius);
+  overflow:hidden; border:1px solid var(--border); background:#0b0e13}
+#office3d{width:100%; height:100%; display:block; touch-action:none; cursor:grab}
+#office3d:active{cursor:grabbing}
+#officeHint{position:absolute; left:12px; bottom:12px; background:rgba(10,12,16,.72); border:1px solid var(--border);
+  border-radius:10px; padding:7px 12px; font-size:12px; color:var(--muted); pointer-events:none; backdrop-filter:blur(6px)}
+#officeClose{display:none; position:absolute; top:12px; right:12px; z-index:5}
+/* ---------- Mobile ---------- */
+@media (max-width:860px){
+  body{flex-direction:column}
+  #sidebar{width:100%; flex:0 0 auto; flex-direction:column; padding:10px; border-right:0; border-bottom:1px solid var(--border)}
+  .brand{padding:2px 6px 8px}
+  #sidebar nav{flex-direction:row; overflow-x:auto; gap:4px; padding-bottom:2px}
+  #sidebar nav button{white-space:nowrap; width:auto; padding:8px 10px}
+  #sidebar nav button .lbl{display:none}
+  .side-foot{display:none}
+  #views{padding:12px}
+  #topbar{padding:0 12px}
+  #clock{display:none}
+}
+@media (max-width:768px){
+  #view-office.active{position:fixed; inset:0; z-index:60; padding:0}
+  #view-office.active #officeWrap{height:100dvh; border-radius:0; border:0}
+  #officeClose{display:block}
+  body.office-open{overflow:hidden}
+  body.office-open #sidebar, body.office-open #topbar{display:none}
+}
+</style>
+</head>
+<body>
+<aside id="sidebar">
+  <div class="brand"><span class="dot"></span><div><b>Mission Control</b><small>pusat kendali tim AI</small></div></div>
+  <nav>
+    <button data-view="office" class="active"><span class="ico">🖥️</span><span class="lbl">Virtual Office</span></button>
+    <button data-view="agents"><span class="ico">🤖</span><span class="lbl">Agent Overview</span></button>
+    <button data-view="queue"><span class="ico">📥</span><span class="lbl">Task Queue</span><span class="badge" id="navQueueBadge" style="display:none">0</span></button>
+    <button data-view="system"><span class="ico">📊</span><span class="lbl">System Metrics</span></button>
+    <button data-view="vps"><span class="ico">🗄️</span><span class="lbl">VPS Status</span></button>
+    <button data-view="schedules"><span class="ico">🗓️</span><span class="lbl">Tugas Terjadwal</span></button>
+    <button data-view="tokens"><span class="ico">🔑</span><span class="lbl">Token Status</span></button>
+    <button data-view="fleet"><span class="ico">🚀</span><span class="lbl">Agent Fleet</span></button>
+    <button data-view="log"><span class="ico">📜</span><span class="lbl">Real-Time Log</span></button>
+  </nav>
+  <div class="side-foot" id="sideFoot">menghubungkan…</div>
+</aside>
+<div id="main">
+  <header id="topbar">
+    <h1 id="tbTitle">Virtual Office</h1>
+    <div class="tb-right">
+      <span class="pill gray" id="tunnelBadge">TUNNEL …</span>
+      <span id="clock">—</span>
+      <button class="btn ghost warn" id="dispatchBtn">Pause</button>
+    </div>
+  </header>
+  <main id="views">
+    <section id="view-office" class="view active">
+      <div id="officeWrap">
+        <canvas id="office3d"></canvas>
+        <div id="officeHint">Drag untuk putar • Scroll untuk zoom • Klik robot untuk pause/resume</div>
+        <button class="btn" id="officeClose">✕ Tutup</button>
+      </div>
+    </section>
+    <section id="view-agents" class="view"><div class="h-label">Status tiap agent</div><div class="grid" id="agentsGrid"></div></section>
+    <section id="view-queue" class="view">
+      <div class="card">
+        <div class="h-label">Tambah quick task</div>
+        <div class="row">
+          <input type="text" id="qPrompt" placeholder="Tulis tugas singkat…">
+          <button class="btn" data-q="research-agent-01">🔍 Research</button>
+          <button class="btn" data-q="coding-agent-02">💻 Coding</button>
+          <button class="btn" data-q="vision-agent-03">👁️ Vision</button>
+          <button class="btn" data-q="aris">🎨 Design</button>
+        </div>
+      </div>
+      <div class="card"><div class="h-label">Antrean <span class="pill blue" id="queueCount">0</span></div><div id="queueList"></div></div>
+    </section>
+    <section id="view-system" class="view"><div class="h-label">Metrik sistem (dari /proc)</div><div class="grid" id="systemGrid"></div></section>
+    <section id="view-vps" class="view"><div class="h-label">Status VPS</div><div class="grid" id="vpsGrid"></div></section>
+    <section id="view-schedules" class="view">
+      <div class="card"><div class="h-label">Jadwal Saya</div><div id="schedMine"></div></div>
+      <div class="card"><details class="sys"><summary id="schedSysSummary">Jadwal Sistem</summary><div id="schedSys"></div></details></div>
+    </section>
+    <section id="view-tokens" class="view"><div class="h-label">Pemakaian token</div><div id="tokenCard"></div></section>
+    <section id="view-fleet" class="view"><div class="h-label">Armada agent</div><div class="grid" id="fleetGrid"></div></section>
+    <section id="view-log" class="view"><div class="h-label">Log aktivitas real-time</div><pre id="logPre"></pre></section>
+  </main>
+</div>
+<script src="vendor/three.min.js"></script>
+<script src="config.js"></script>
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let S = null;
+
+const TITLES = { office:'Virtual Office', agents:'Agent Overview', queue:'Task Queue', system:'System Metrics', vps:'VPS Status', schedules:'Tugas Terjadwal', tokens:'Token Status', fleet:'Agent Fleet', log:'Real-Time Log' };
+document.querySelectorAll('#sidebar nav button').forEach(b => b.addEventListener('click', () => showView(b.dataset.view)));
+function showView(name){
+  document.querySelectorAll('#sidebar nav button').forEach(x => x.classList.toggle('active', x.dataset.view === name));
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  $('#tbTitle').textContent = TITLES[name] || name;
+  document.body.classList.toggle('office-open', name === 'office' && window.innerWidth <= 768);
+  if (name === 'office' && window.__office) window.__office.resize();
+  if (name === 'log') { const p = $('#logPre'); p.scrollTop = p.scrollHeight; }
+}
+$('#officeClose').addEventListener('click', () => showView('agents'));
+
+function statusPill(st){
+  if (st === 'working') return '<span class="pill green">WORKING</span>';
+  if (st === 'paused') return '<span class="pill amber">PAUSED</span>';
+  return '<span class="pill gray">IDLE</span>';
+}
+function fmtDateID(iso){
+  if (!iso) return '—';
+  try {
+    return new Date(iso).toLocaleString('id-ID', { timeZone:'Asia/Jakarta', day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+  } catch(e){ return iso; }
+}
+
+/* ---------- Supabase client (tanpa dependensi) ----------
+ * Kredensial di config.js: SUPABASE_URL + SUPABASE_ANON_KEY.
+ * Anon key memang dirancang untuk diekspos di frontend publik;
+ * yang membatasi akses adalah RLS (lihat supabase-schema.sql).
+ * Aksi tulis dari sini: antrean (insert), dispatch & pause (upsert).
+ * Perubahan tampil di dashboard dalam <=60 dtk (collector push tiap 30 dtk).
+ */
+const SBC = () => (window.MC_CONFIG || {});
+function sbURL(){ return String(SBC().SUPABASE_URL || '').replace(/\/$/, ''); }
+function sbKey(){ return SBC().SUPABASE_ANON_KEY || ''; }
+function sbConfigured(){
+  const u = sbURL(), k = sbKey();
+  return !!(u && k && !/CONTOH/i.test(u) && !/CONTOH/i.test(k));
+}
+function sbHeaders(prefer){
+  const h = { 'apikey': sbKey(), 'Authorization': 'Bearer ' + sbKey(), 'Content-Type': 'application/json' };
+  if (prefer) h['Prefer'] = prefer;
+  return h;
+}
+async function sbReq(method, rest, body, prefer){
+  const r = await fetch(`${sbURL()}/rest/v1/${rest}`, {
+    method, headers: sbHeaders(prefer),
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  if (!r.ok) throw new Error('Supabase HTTP ' + r.status);
+  const t = await r.text();
+  return t ? JSON.parse(t) : null;
+}
+async function poll(){
+  try {
+    if (!sbConfigured()){
+      $('#sideFoot').textContent = 'isi SUPABASE_URL & ANON_KEY di config.js — lihat README-DEPLOY.md';
+      return;
+    }
+    const rows = await sbReq('GET', 'state_snapshots?id=eq.1&select=payload,updated_at');
+    if (!rows || !rows.length){
+      $('#sideFoot').textContent = 'menunggu snapshot pertama dari collector…';
+      return;
+    }
+    S = rows[0].payload;
+    renderAll();
+    const age = Math.max(0, Math.round((Date.now() - new Date(rows[0].updated_at).getTime()) / 1000));
+    $('#sideFoot').textContent = `terhubung • data ${age} dtk lalu • refresh 3 dtk`;
+  } catch(e){
+    $('#sideFoot').textContent = 'terputus — mencoba lagi…';
+  }
+}
+
+function renderAll(){
+  if (!S) return;
+  $('#clock').textContent = S.clock || '';
+  // tunnel badge
+  const tb = $('#tunnelBadge');
+  if (S.vps.tunnel.url){
+    tb.className = 'pill ' + (S.vps.tunnel.online ? 'green' : 'red');
+    tb.textContent = S.vps.tunnel.online ? 'TUNNEL ONLINE' : 'TUNNEL OFFLINE';
+  } else { tb.className = 'pill gray'; tb.textContent = 'TUNNEL OFF'; }
+  // dispatch button
+  const db = $('#dispatchBtn');
+  db.textContent = S.dispatch_paused ? '▶ Resume' : '⏸ Pause';
+  db.className = 'btn ghost ' + (S.dispatch_paused ? 'go' : 'warn');
+  // queue badge
+  const qb = $('#navQueueBadge');
+  qb.style.display = S.queue_count > 0 ? '' : 'none';
+  qb.textContent = S.queue_count;
+  $('#queueCount').textContent = S.queue_count + ' antre';
+  renderAgents(); renderQueue(); renderSystem(); renderVps(); renderSchedules(); renderTokens(); renderFleet(); renderLog();
+  if (window.__office) window.__office.update(S);
+}
+
+function renderAgents(){
+  $('#agentsGrid').innerHTML = S.agents.map(a => `
+    <div class="card agent-card">
+      <div class="who">
+        <div class="avatar" style="background:${esc(a.color)}55; border:1px solid ${esc(a.color)}">${esc(a.id.slice(0,2).toUpperCase())}</div>
+        <div><b>${esc(a.id)}</b><div class="sub">${esc(a.role)}</div></div>
+        <div style="margin-left:auto">${statusPill(a.status)}</div>
+      </div>
+      ${a.task ? `<div class="kv"><span class="k">Task aktif</span><span class="mono">${esc(a.task.title)}</span></div>
+      <div class="kv"><span class="k">Status</span><span>${esc(a.task.status)}</span></div>
+      <div class="kv"><span class="k">Mulai</span><span class="sub">${esc(fmtDateID(a.task.ts))}</span></div>`
+      : `<div class="sub">Tidak ada task aktif.</div>`}
+      ${a.last_done_ts ? `<div class="kv"><span class="k">Terakhir selesai</span><span class="sub">${esc(a.last_done_title || '')}</span></div>` : ''}
+    </div>`).join('');
+}
+
+function renderQueue(){
+  const el = $('#queueList');
+  if (!S.queue.length){ el.innerHTML = '<div class="sub">Antrean kosong.</div>'; return; }
+  el.innerHTML = S.queue.map(q => `
+    <div class="sched-item">
+      <span class="pill ${q.status === 'queued' ? 'blue' : 'gray'}">${esc(q.status)}</span>
+      <div style="flex:1; min-width:180px"><div>${esc(q.prompt)}</div><div class="sub">${esc(q.agent)} • ${esc(fmtDateID(q.ts))}</div></div>
+    </div>`).join('');
+}
+document.querySelectorAll('[data-q]').forEach(b => b.addEventListener('click', async () => {
+  const prompt = $('#qPrompt').value.trim() || ('Quick task ' + b.textContent.trim());
+  b.disabled = true;
+  try { await sbReq('POST', 'queue', { ts: new Date().toISOString(), prompt, agent: b.dataset.q, status: 'queued' }, 'return=minimal'); $('#qPrompt').value=''; await poll(); }
+  catch(e){ alert('Gagal menambah antrean: ' + e.message); }
+  b.disabled = false;
+}));
+$('#qPrompt').addEventListener('keydown', e => { if (e.key === 'Enter') document.querySelector('[data-q]').click(); });
+
+function renderSystem(){
+  const s = S.system;
+  const memPct = s.mem_host.total ? (s.mem_host.used / s.mem_host.total * 100) : 0;
+  $('#systemGrid').innerHTML = `
+    <div class="card"><div class="h-label">CPU Load</div>
+      <div style="font-size:26px; font-weight:700">${s.load.m1.toFixed(2)}</div>
+      <div class="sub">1 / 5 / 15 mnt: ${s.load.m1.toFixed(2)} • ${s.load.m5.toFixed(2)} • ${s.load.m15.toFixed(2)}</div>
+      <div class="bar"><i style="width:${Math.min(100, s.load.m1 / Math.max(1,s.cpu_count) * 100)}%"></i></div>
+      <div class="sub" style="margin-top:6px">${esc(s.cpu_count)} core • ${esc(s.cpu_model)}</div></div>
+    <div class="card"><div class="h-label">Memory (Container)</div>
+      <div style="font-size:26px; font-weight:700">${esc(s.mem_container.text)}</div>
+      <div class="sub">RSS ${esc(String(s.mem_container.procs))} proses • host: ${esc(s.mem_host.text_used)} / ${esc(s.mem_host.text_total)}</div>
+      <div class="bar"><i class="green" style="width:${Math.min(100, memPct)}%"></i></div></div>
+    <div class="card"><div class="h-label">Uptime</div>
+      <div style="font-size:26px; font-weight:700">${esc(s.uptime)}</div>
+      <div class="sub">server berjalan sejak boot</div></div>`;
+}
+
+function renderVps(){
+  const v = S.vps;
+  const dPct = v.disk.pct || 0;
+  const tun = v.tunnel;
+  $('#vpsGrid').innerHTML = `
+    <div class="card"><div class="h-label">Disk</div>
+      <div style="font-size:22px; font-weight:700">${esc(v.disk.text_used)} <span class="sub">/ ${esc(v.disk.text_total)}</span></div>
+      <div class="bar"><i class="${dPct >= 90 ? 'red' : ''}" style="width:${Math.min(100,dPct)}%"></i></div>
+      <div class="sub" style="margin-top:6px">${dPct.toFixed(1)}% terpakai${dPct >= 90 ? ' — <b style="color:var(--red)">hampir penuh!</b>' : ''}</div></div>
+    <div class="card"><div class="h-label">CPU</div>
+      <div style="font-weight:600">${esc(v.cpu.model)}</div>
+      <div class="sub">${esc(String(v.cpu.count))} core • load ${v.cpu.load.m1.toFixed(2)} / ${v.cpu.load.m5.toFixed(2)} / ${v.cpu.load.m15.toFixed(2)}</div></div>
+    <div class="card"><div class="h-label">Memory (Container)</div>
+      <div style="font-size:22px; font-weight:700">${esc(v.memory_container.text)}</div>
+      <div class="sub">container kita • host: ${esc(v.memory_host.text_used)} / ${esc(v.memory_host.text_total)} (di luar kendali)</div></div>
+    <div class="card"><div class="h-label">Uptime Server</div>
+      <div style="font-size:22px; font-weight:700">${esc(v.uptime)}</div><div class="sub">sejak boot</div></div>
+    <div class="card"><div class="h-label">Tunnel</div>
+      ${tun.url ? `<div style="margin-bottom:8px"><span class="pill ${tun.online ? 'green' : 'red'}">${tun.online ? 'ONLINE' : 'OFFLINE'}</span></div>
+      <a href="${esc(tun.url)}" target="_blank" rel="noopener" class="mono">${esc(tun.url)}</a>`
+      : `<span class="pill gray">OFFLINE</span><div class="sub" style="margin-top:8px">Belum ada URL publik. Jalankan bore + watchdog.</div>`}</div>
+    <div class="card"><div class="h-label">OS</div><div style="font-weight:600">${esc(v.os)}</div><div class="sub">Node.js backend tanpa dependensi</div></div>
+    <div class="card"><div class="h-label">Watchdog Terakhir Jalan</div>
+      ${v.watchdog ? `<div style="font-weight:600">${esc(fmtDateID(v.watchdog.ts))}</div><div class="sub">${esc(v.watchdog.event)}${v.watchdog.note ? ' • ' + esc(v.watchdog.note) : ''}</div>`
+      : '<div class="sub">Belum pernah jalan.</div>'}</div>`;
+}
+
+function schedItem(s){
+  return `<div class="sched-item">
+    <span class="pill ${s.enabled ? 'green' : 'gray'}">${s.enabled ? 'ON' : 'OFF'}</span>
+    <div style="flex:1; min-width:200px"><div><b>${esc(s.title)}</b></div>
+      <div class="sub mono">${esc(s.id)}${s.owner ? ' • ' + esc(s.owner) : ''}</div></div>
+    <div style="text-align:right"><div class="sub">${esc(s.label)}</div>
+      <div class="sub">${s.next_iso ? 'berikutnya: ' + esc(fmtDateID(s.next_iso)) : ''}</div></div>
+  </div>`;
+}
+function renderSchedules(){
+  const mine = S.schedules.filter(s => !s.is_system), sys = S.schedules.filter(s => s.is_system);
+  $('#schedMine').innerHTML = mine.length ? mine.map(schedItem).join('') : '<div class="sub">Tidak ada jadwal.</div>';
+  $('#schedSys').innerHTML = sys.length ? sys.map(schedItem).join('') : '<div class="sub">Tidak ada jadwal sistem.</div>';
+  $('#schedSysSummary').textContent = `Jadwal Sistem (${sys.length})`;
+}
+
+function renderTokens(){
+  const t = S.tokens;
+  $('#tokenCard').innerHTML = t.placeholder
+    ? `<div class="card"><div class="h-label">Token Status</div>
+       <p class="sub" style="margin-bottom:10px">${esc(t.note)}</p>
+       <p class="sub">Begitu sumber data tersedia, angka pemakaian vs batas paket akan tampil di sini — tanpa angka palsu.</p></div>`
+    : `<div class="card"><div class="h-label">Token Status</div><pre class="mono" style="white-space:pre-wrap">${esc(t.text)}</pre></div>`;
+}
+
+function renderFleet(){
+  $('#fleetGrid').innerHTML = S.roster.map(r => `
+    <div class="card"><div class="who" style="display:flex; gap:12px; align-items:center; margin-bottom:8px">
+      <div class="avatar" style="background:${esc(r.color)}55; border:1px solid ${esc(r.color)}">${esc(r.id.slice(0,2).toUpperCase())}</div>
+      <div><b>${esc(r.id)}</b><div class="sub">${esc(r.role)}</div></div></div>
+      <div class="sub" style="margin-bottom:8px">${esc(r.desc)}</div>
+      <ul style="padding-left:18px; color:var(--muted); font-size:13px">${r.caps.map(c => `<li>${esc(c)}</li>`).join('')}</ul>
+    </div>`).join('');
+}
+
+function renderLog(){
+  const p = $('#logPre');
+  const atBottom = p.scrollHeight - p.scrollTop - p.clientHeight < 40;
+  p.textContent = (S.log && S.log.length ? S.log : ['(belum ada event di tasks.jsonl)']).join('\n');
+  if (atBottom) p.scrollTop = p.scrollHeight;
+}
+
+$('#dispatchBtn').addEventListener('click', async () => {
+  if (!S) return;
+  try { await sbReq('POST', 'dispatch', { id: 1, paused: !S.dispatch_paused, updated_at: new Date().toISOString() }, 'resolution=merge-duplicates,return=minimal'); await poll(); }
+  catch(e){ alert('Gagal mengubah dispatch: ' + e.message); }
+});
+
+poll();
+setInterval(poll, 3000);
+
+/* ================= VIRTUAL OFFICE (Three.js r128, vendor lokal) ================= */
+(function(){
+if (!window.THREE){
+  document.getElementById('officeHint').textContent = 'Three.js gagal dimuat (vendor/three.min.js tidak ditemukan).';
+  return;
+}
+const canvas = document.getElementById('office3d');
+const wrap = document.getElementById('officeWrap');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputEncoding = THREE.sRGBEncoding;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0b0e13);
+scene.fog = new THREE.Fog(0x0b0e13, 16, 34);
+const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+scene.add(new THREE.HemisphereLight(0x8fb4ff, 0x201812, 0.3));
+const dirL = new THREE.DirectionalLight(0xfff1d6, 0.65);
+dirL.position.set(6, 9, 5); dirL.castShadow = true;
+dirL.shadow.mapSize.set(1024, 1024);
+dirL.shadow.camera.left = -9; dirL.shadow.camera.right = 9; dirL.shadow.camera.top = 9; dirL.shadow.camera.bottom = -9;
+scene.add(dirL);
+const deskGlow = new THREE.PointLight(0xffd9a0, 0.7, 9);
+deskGlow.position.set(0, 2.8, -1.4); scene.add(deskGlow);
+
+const M = (c, r, m) => new THREE.MeshStandardMaterial({ color:c, roughness: r==null?0.7:r, metalness: m==null?0.15:m });
+function box(w,h,d,mat,x,y,z,shadow){ const ms=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat); ms.position.set(x,y,z); if(shadow!==false){ms.castShadow=true; ms.receiveShadow=true;} scene.add(ms); return ms; }
+function mkCanvas(w,h){ const c=document.createElement('canvas'); c.width=w; c.height=h; return [c, c.getContext('2d')]; }
+
+/* ----- Ruangan ----- */
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(18,14), M(0x141821, 0.95, 0));
+floor.rotation.x = -Math.PI/2; floor.receiveShadow = true; scene.add(floor);
+const rug = new THREE.Mesh(new THREE.CircleGeometry(3.6, 40), M(0x1a2130, 1, 0));
+rug.rotation.x = -Math.PI/2; rug.position.set(0, 0.012, -1.4); rug.receiveShadow = true; scene.add(rug);
+box(18, 5.5, 0.24, M(0x0f131a, 1, 0), 0, 2.75, -4.6);          // dinding belakang
+box(0.24, 5.5, 14, M(0x0e1219, 1, 0), -8.6, 2.75, 0);          // dinding kiri
+box(0.24, 5.5, 14, M(0x0e1219, 1, 0), 8.6, 2.75, 0);           // dinding kanan
+
+/* ----- Jendela kota malam ----- */
+(function(){
+  const [c, x] = mkCanvas(512, 288);
+  const sky = x.createLinearGradient(0,0,0,288);
+  sky.addColorStop(0,'#070b16'); sky.addColorStop(1,'#14263f');
+  x.fillStyle = sky; x.fillRect(0,0,512,288);
+  x.fillStyle = '#e8ecf5'; x.beginPath(); x.arc(430, 52, 22, 0, 7); x.fill();
+  x.fillStyle = 'rgba(232,236,245,.25)'; x.beginPath(); x.arc(430, 52, 34, 0, 7); x.fill();
+  let seed = 7; const rnd = () => (seed = (seed*16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 26; i++){
+    const bw = 24 + rnd()*46, bh = 90 + rnd()*130, bx = rnd()*(512-bw), by = 288-bh;
+    x.fillStyle = '#0a0f1c'; x.fillRect(bx, by, bw, bh);
+    for (let wy = by+8; wy < 280; wy += 12) for (let wx = bx+5; wx < bx+bw-6; wx += 10)
+      if (rnd() > 0.55){ x.fillStyle = rnd() > 0.3 ? '#ffd98a' : '#9db8e8'; x.fillRect(wx, wy, 5, 7); }
+  }
+  const tex = new THREE.CanvasTexture(c);
+  const win = new THREE.Mesh(new THREE.PlaneGeometry(7.4, 3.1), new THREE.MeshBasicMaterial({ map: tex }));
+  win.position.set(0.6, 3.0, -4.46); scene.add(win);
+  const fr = M(0x232a38, .6, .3);
+  box(7.7, 0.12, 0.1, fr, 0.6, 4.62, -4.44); box(7.7, 0.12, 0.1, fr, 0.6, 1.38, -4.44);
+  box(0.12, 3.36, 0.1, fr, -3.12, 3.0, -4.44); box(0.12, 3.36, 0.1, fr, 4.32, 3.0, -4.44);
+  box(0.08, 3.1, 0.08, fr, 0.6, 3.0, -4.44);
+})();
+
+/* ----- Meja + kursi ----- */
+const deskMat = M(0x2b3242, .55, .25);
+box(5.4, 0.1, 1.9, deskMat, 0, 0.8, -2.4);
+[[-2.5,-3.2],[2.5,-3.2],[-2.5,-1.6],[2.5,-1.6]].forEach(([lx,lz]) => box(0.12,0.8,0.12, deskMat, lx, 0.4, lz));
+function makeChair(){
+  const c = new THREE.Group(); const m = M(0x232936, .7, .2);
+  const seat = new THREE.Mesh(new THREE.BoxGeometry(0.54,0.09,0.52), m); seat.position.y = 0.52; seat.castShadow = true; c.add(seat);
+  const back = new THREE.Mesh(new THREE.BoxGeometry(0.54,0.62,0.09), m); back.position.set(0,0.95,0.27); back.castShadow = true; c.add(back);
+  const post = new THREE.Mesh(new THREE.CylinderGeometry(0.045,0.045,0.5,10), m); post.position.y = 0.27; c.add(post);
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.28,0.32,0.06,14), m); base.position.y = 0.03; c.add(base);
+  c.rotation.y = 0; scene.add(c); return c; // menghadap meja (-z), sandaran di +z
+}
+const SEAT_X = [-2.2,-1.32,-0.44,0.44,1.32,2.2], SEAT_Z = -0.85;
+SEAT_X.forEach(x => { const ch = makeChair(); ch.position.set(x, 0, SEAT_Z); });
+const BACK_X = [-3.6,-2.16,-0.72,0.72,2.16,3.6], BACK_Z = 2.9;
+
+/* ----- Monitor: 1 scrolling kode, 1 chart animasi ----- */
+const CODE = [
+  ['// mission-control/server.js','#6b7280'], ['const http = require(\'http\');','#c084fc'],
+  ['const tasks = readJsonLines(DATA);','#e5e7eb'], ['function buildState() {','#c084fc'],
+  ['  const load = loadAvg();','#e5e7eb'], ['  // container RSS dari /proc','#6b7280'],
+  ['  const mem = containerMem();','#e5e7eb'], ['  return { agents, queue };','#93c5fd'], ['}','',''],
+  ['server.listen(3001, \'127.0.0.1\');','#34d399'], ['// watchdog: cek bore tiap 5 mnt','#6b7280'],
+  ['if (!tunnel.online) restart();','#fbbf24'], ['appendJsonLine(tasks, event);','#e5e7eb'],
+];
+const [codeC, codeX] = mkCanvas(320, 200);
+const codeTex = new THREE.CanvasTexture(codeC);
+let codeOff = 0;
+function drawCode(){
+  codeX.fillStyle = '#0d1117'; codeX.fillRect(0,0,320,200);
+  codeX.font = '13px Menlo,monospace';
+  const LH = 17, total = CODE.length * LH;
+  for (let i = -1; i < 14; i++){
+    const idx = ((Math.floor(codeOff / LH) + i) % CODE.length + CODE.length) % CODE.length;
+    const [txt, col] = CODE[idx];
+    const y = i * LH - (codeOff % LH) + 16;
+    codeX.fillStyle = col || '#e5e7eb'; codeX.fillText(txt || '', 10, y);
+  }
+  codeX.fillStyle = 'rgba(13,17,23,.85)'; codeX.fillRect(0,0,320,10); codeX.fillRect(0,190,320,10);
+  codeTex.needsUpdate = true;
+}
+drawCode();
+const [chC, chX] = mkCanvas(320, 200);
+const chTex = new THREE.CanvasTexture(chC);
+const chData = Array.from({length:42}, () => 0.5);
+function drawChart(){
+  chX.fillStyle = '#0d1117'; chX.fillRect(0,0,320,200);
+  chX.strokeStyle = 'rgba(255,255,255,.08)'; chX.lineWidth = 1;
+  for (let gy = 30; gy < 200; gy += 34){ chX.beginPath(); chX.moveTo(0,gy); chX.lineTo(320,gy); chX.stroke(); }
+  const grad = chX.createLinearGradient(0,0,0,200);
+  grad.addColorStop(0,'rgba(91,124,255,.5)'); grad.addColorStop(1,'rgba(91,124,255,.02)');
+  chX.beginPath(); chX.moveTo(0,200);
+  chData.forEach((v,i) => chX.lineTo(i/(chData.length-1)*320, 190 - v*160));
+  chX.lineTo(320,200); chX.closePath(); chX.fillStyle = grad; chX.fill();
+  chX.beginPath();
+  chData.forEach((v,i) => { const px=i/(chData.length-1)*320, py=190-v*160; i?chX.lineTo(px,py):chX.moveTo(px,py); });
+  chX.strokeStyle = '#5b7cff'; chX.lineWidth = 2; chX.stroke();
+  chTex.needsUpdate = true;
+}
+drawChart();
+function makeMonitor(x, tex, tilt){
+  const g = new THREE.Group();
+  const shell = new THREE.Mesh(new THREE.BoxGeometry(1.3,0.85,0.07), M(0x11141b,.5,.4));
+  shell.castShadow = true; g.add(shell);
+  const scr = new THREE.Mesh(new THREE.PlaneGeometry(1.18,0.73), new THREE.MeshBasicMaterial({ map: tex }));
+  scr.position.z = 0.037; g.add(scr);
+  const neck = new THREE.Mesh(new THREE.BoxGeometry(0.1,0.32,0.08), M(0x11141b,.5,.4)); neck.position.y = -0.56; g.add(neck);
+  const foot = new THREE.Mesh(new THREE.BoxGeometry(0.5,0.05,0.3), M(0x11141b,.5,.4)); foot.position.y = -0.72; g.add(foot);
+  g.position.set(x, 1.62, -2.55); g.rotation.y = tilt; scene.add(g);
+}
+makeMonitor(-0.85, codeTex, 0.14);
+makeMonitor(0.85, chTex, -0.14);
+
+/* ----- Tanaman & lampu ----- */
+(function(){
+  const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.24,0.42,14), M(0x7a5238,.8,0));
+  pot.position.set(5.6,0.21,-3.4); pot.castShadow = true; scene.add(pot);
+  const leaf = M(0x2f9e5f,.8,0);
+  [[0,1.0,0,0.5,0.9],[0.25,0.8,0.1,0.4,0.7],[-0.25,0.85,-0.1,0.42,0.75]].forEach(([lx,ly,lz,r,h])=>{
+    const cone = new THREE.Mesh(new THREE.ConeGeometry(r,h,10), leaf);
+    cone.position.set(5.6+lx, ly, -3.4+lz); cone.castShadow = true; scene.add(cone);
+  });
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.07,2.7,10), M(0x232936,.6,.3));
+  pole.position.set(-5.6,1.35,-3.2); pole.castShadow = true; scene.add(pole);
+  const shade = new THREE.Mesh(new THREE.ConeGeometry(0.34,0.3,14,1,true), M(0xd9a45b,.6,.2));
+  shade.position.set(-5.6,2.75,-3.2); scene.add(shade);
+  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.09,12,12), new THREE.MeshBasicMaterial({color:0xffe2b0}));
+  bulb.position.set(-5.6,2.62,-3.2); scene.add(bulb);
+  const pl = new THREE.PointLight(0xffd9a0, 0.55, 7); pl.position.set(-5.6,2.5,-3.0); scene.add(pl);
+})();
+/* Lampu status global */
+const statusLampMat = new THREE.MeshStandardMaterial({ color:0x111111, emissive:0x34d399, emissiveIntensity:1.2 });
+(function(){
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.05,1.6,8), M(0x232936,.6,.3));
+  pole.position.set(3.4,0.8,-3.4); scene.add(pole);
+  const orb = new THREE.Mesh(new THREE.SphereGeometry(0.11,14,14), statusLampMat);
+  orb.position.set(3.4,1.68,-3.4); scene.add(orb);
+})();
+
+/* ----- Robot 3D per agent ----- */
+function makeLabel(name, role){
+  const [c, x] = mkCanvas(256, 76);
+  x.fillStyle = 'rgba(8,10,14,0.78)'; x.fillRect(0, 0, 256, 76);
+  x.strokeStyle = 'rgba(255,255,255,0.14)'; x.strokeRect(0.5, 0.5, 255, 75);
+  x.textAlign = 'center';
+  x.fillStyle = '#ffffff'; x.font = 'bold 25px Inter, sans-serif';
+  x.fillText(name.length > 14 ? name.slice(0,14) : name, 128, 32);
+  x.fillStyle = '#9aa0aa'; x.font = '17px Inter, sans-serif';
+  x.fillText(role, 128, 58);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), depthTest: false, transparent: true, fog: false }));
+  sp.scale.set(1.55, 0.46, 1); sp.position.y = 1.98; sp.renderOrder = 10;
+  return sp;
+}
+function makeKeysTexture(){
+  const [c, x] = mkCanvas(256, 96);
+  x.fillStyle = '#141821'; x.fillRect(0,0,256,96);
+  for (let r = 0; r < 4; r++) for (let k = 0; k < 12; k++){
+    x.fillStyle = (r===0 && k<3) ? '#5b7cff' : '#2a3040';
+    x.fillRect(8 + k*20, 8 + r*21, 16, 16);
+  }
+  return new THREE.CanvasTexture(c);
+}
+const robots = {};
+function makeRobot(cfg){
+  const colInt = parseInt(String(cfg.color).replace('#',''), 16) || 0x5b7cff;
+  const g = new THREE.Group(); g.userData.agentId = cfg.id;
+  const inner = new THREE.Group(); g.add(inner);
+  const mat = (c,r,m) => new THREE.MeshStandardMaterial({ color:c, roughness:r==null?0.65:r, metalness:m==null?0.25:m });
+  const bodyMat = mat(0x2b3242), accMat = mat(colInt, 0.45, 0.5);
+  const rec = { id: cfg.id, g, inner, blink: 1+Math.random()*4, phase: Math.random()*6.28, hop: -1, seen: false, lastDone: null, sitK: 0, workT: 0, status: 'idle',
+    target: { pos: new THREE.Vector3(), rotY: 0, sitting: false } };
+  function leg(x){
+    const hip = new THREE.Group(); hip.position.set(x, 0.52, 0); inner.add(hip);
+    const th = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.10, 0.5, 12), bodyMat);
+    th.position.y = -0.25; th.castShadow = true; hip.add(th);
+    const foot = new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.08, 0.27), accMat);
+    foot.position.set(0, -0.52, 0.05); foot.castShadow = true; hip.add(foot);
+    return hip;
+  }
+  rec.legL = leg(-0.14); rec.legR = leg(0.14);
+  const chest = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.62, 0.36), bodyMat);
+  chest.position.y = 0.85; chest.castShadow = true; inner.add(chest);
+  const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.1, 0.38), accMat);
+  stripe.position.y = 1.02; inner.add(stripe);
+  const core = new THREE.Mesh(new THREE.SphereGeometry(0.055, 12, 12),
+    new THREE.MeshStandardMaterial({ color:0x111111, emissive: colInt, emissiveIntensity: 1 }));
+  core.position.set(0, 0.84, 0.19); inner.add(core); rec.core = core;
+  function arm(x){
+    const sh = new THREE.Group(); sh.position.set(x, 1.10, 0); inner.add(sh);
+    const a = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.075, 0.46, 12), bodyMat);
+    a.position.y = -0.23; a.castShadow = true; sh.add(a);
+    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.075, 12, 12), accMat);
+    hand.position.y = -0.48; sh.add(hand);
+    return { pivot: sh, hand };
+  }
+  rec.armL = arm(-0.36); rec.armR = arm(0.36);
+  const headG = new THREE.Group(); headG.position.y = 1.34; inner.add(headG); rec.headG = headG;
+  const head = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.36, 0.38), bodyMat);
+  head.castShadow = true; headG.add(head);
+  const eyeMat = new THREE.MeshStandardMaterial({ color:0xffffff, emissive:0xffffff, emissiveIntensity:0.3 });
+  const pupMat = new THREE.MeshStandardMaterial({ color:0x0b0e13, roughness:0.3 });
+  if (cfg.id !== 'vision-agent-03'){
+    const mkEye = (x) => {
+      const e = new THREE.Group(); e.position.set(x, 0.04, 0.20);
+      e.add(new THREE.Mesh(new THREE.SphereGeometry(0.062, 12, 12), eyeMat));
+      const p = new THREE.Mesh(new THREE.SphereGeometry(0.028, 10, 10), pupMat); p.position.z = 0.042; e.add(p);
+      headG.add(e); return e;
+    };
+    rec.eyeL = mkEye(-0.11); rec.eyeR = mkEye(0.11);
+  }
+  /* --- Aksesori per peran --- */
+  const em = (c, i) => new THREE.MeshStandardMaterial({ color:0x111111, emissive:c, emissiveIntensity:i||1 });
+  if (cfg.id === 'aris'){
+    const beret = new THREE.Mesh(new THREE.CylinderGeometry(0.21, 0.235, 0.085, 18), mat(0x7c3aed, .7, .1));
+    beret.position.set(0.07, 0.235, 0); beret.rotation.z = 0.2; beret.castShadow = true; headG.add(beret);
+    const tablet = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.025, 0.26), mat(0x141821, .4, .4));
+    tablet.position.set(0, -0.5, 0.14); tablet.rotation.x = -0.45; rec.armL.pivot.add(tablet);
+    const stylus = new THREE.Mesh(new THREE.CylinderGeometry(0.013, 0.013, 0.24, 8), mat(0xd7dce5, .4, .6));
+    stylus.position.set(0, -0.52, 0.06); stylus.rotation.x = 0.7; rec.armR.pivot.add(stylus);
+  } else if (cfg.id === 'udin'){
+    const band = new THREE.Mesh(new THREE.TorusGeometry(0.215, 0.035, 10, 24, Math.PI), mat(0x1c2029, .5, .4));
+    band.position.set(0, 0.02, 0); headG.add(band);
+    [-1,1].forEach(s => {
+      const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.07, 14), mat(0x1c2029, .5, .4));
+      cup.rotation.z = Math.PI/2; cup.position.set(s*0.225, -0.01, 0); headG.add(cup);
+      const dot = new THREE.Mesh(new THREE.SphereGeometry(0.025, 8, 8), em(0xef4444, 1.4));
+      dot.position.set(s*0.265, -0.01, 0); headG.add(dot);
+    });
+    rec.recDot = new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 10), em(0xef4444, 1.6));
+    rec.recDot.position.set(0.17, 0.44, 0.19); inner.add(rec.recDot);
+  } else if (cfg.id === 'vision-agent-03'){
+    const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.105, 0.125, 0.1, 20), mat(0x141821, .35, .6));
+    lens.rotation.x = Math.PI/2; lens.position.set(0, 0.04, 0.20); headG.add(lens);
+    const glass = new THREE.Mesh(new THREE.SphereGeometry(0.062, 14, 14), em(0x22d3ee, 0.9));
+    glass.position.set(0, 0.04, 0.245); headG.add(glass);
+    rec.lensRing = new THREE.Mesh(new THREE.TorusGeometry(0.105, 0.016, 8, 24), em(0x22d3ee, 1.2));
+    rec.lensRing.position.set(0, 0.04, 0.25); headG.add(rec.lensRing);
+    [-1,1].forEach(s => {
+      const dot = new THREE.Mesh(new THREE.SphereGeometry(0.022, 8, 8), em(0x22d3ee, 1));
+      dot.position.set(s*0.17, -0.09, 0.19); headG.add(dot);
+    });
+  } else if (cfg.id === 'research-agent-01'){
+    const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.36, 8), bodyMat);
+    ant.position.set(0.15, 0.34, 0); headG.add(ant);
+    rec.antTip = new THREE.Mesh(new THREE.SphereGeometry(0.032, 10, 10), em(0x34d399, 1.4));
+    rec.antTip.position.set(0.15, 0.53, 0); headG.add(rec.antTip);
+    const mag = new THREE.Group(); mag.position.set(0, -0.52, 0.12); rec.armR.pivot.add(mag);
+    mag.add(new THREE.Mesh(new THREE.TorusGeometry(0.09, 0.016, 8, 20), accMat));
+    const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.17, 8), bodyMat);
+    handle.position.y = -0.16; mag.add(handle);
+  } else if (cfg.id === 'coding-agent-02'){
+    const kb = new THREE.Group(); kb.position.set(0, 0.72, 0.44); kb.rotation.x = -0.28; inner.add(kb);
+    kb.add(new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.035, 0.2), mat(0x141821, .5, .3)));
+    const keys = new THREE.Mesh(new THREE.PlaneGeometry(0.43, 0.17), new THREE.MeshBasicMaterial({ map: makeKeysTexture() }));
+    keys.rotation.x = -Math.PI/2; keys.position.y = 0.019; kb.add(keys);
+  } else { /* muse: dasi aksen */
+    const tie = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.3, 0.03), accMat);
+    tie.position.set(0, 0.9, 0.195); inner.add(tie);
+  }
+  const ring = new THREE.Mesh(new THREE.CircleGeometry(0.44, 28),
+    new THREE.MeshBasicMaterial({ color: 0x6b7280, transparent: true, opacity: 0.5, side: THREE.DoubleSide }));
+  ring.rotation.x = -Math.PI/2; ring.position.y = 0.02; g.add(ring); rec.ring = ring;
+  g.add(makeLabel(cfg.id, cfg.role));
+  g.position.set(0, 0, 6);
+  scene.add(g);
+  robots[cfg.id] = rec;
+  return rec;
+}
+
+/* ----- Animasi ----- */
+const clamp01 = v => Math.max(0, Math.min(1, v));
+function animateRobots(dt, t){
+  for (const id in robots){
+    const r = robots[id];
+    const k = 1 - Math.exp(-3.2*dt);
+    r.g.position.lerp(r.target.pos, k);
+    let dy = r.target.rotY - r.g.rotation.y;
+    dy = Math.atan2(Math.sin(dy), Math.cos(dy));
+    r.g.rotation.y += dy * k;
+    r.sitK = clamp01(r.sitK + ((r.target.sitting ? 1 : 0) - r.sitK) * Math.min(1, dt*4));
+    const bend = -1.35 * r.sitK;
+    r.legL.rotation.x += (bend - r.legL.rotation.x) * k;
+    r.legR.rotation.x += (bend - r.legR.rotation.x) * k;
+    let hopY = 0;
+    if (r.hop >= 0){
+      r.hop += dt;
+      const hk = r.hop / 0.9;
+      if (hk >= 1) r.hop = -1; else hopY = Math.sin(hk * Math.PI) * 0.5;
+    }
+    r.inner.position.y = r.sitK * 0.07 + hopY;
+    r.inner.rotation.z = Math.sin(t*1.3 + r.phase) * 0.035;
+    r.inner.rotation.y = Math.sin(t*0.7 + r.phase) * 0.05;
+    r.blink -= dt;
+    const es = r.blink < 0.12 ? 0.12 : 1;
+    if (r.blink <= 0) r.blink = 2 + Math.random()*4;
+    if (r.eyeL){ r.eyeL.scale.y = es; r.eyeR.scale.y = es; }
+    const working = r.status === 'working', frozen = r.status === 'paused';
+    let aLx=0, aLz=0.14, aRx=0, aRz=-0.14, hX=0, hY=0, hZ=0;
+    if (working && !frozen){
+      r.workT += dt; const wt = r.workT;
+      if (id === 'aris'){ aRx = -0.7 + Math.sin(wt*2.6)*0.35; aRz = Math.cos(wt*2.6)*0.4 - 0.2; aLx = -0.55; hX = 0.18; }
+      else if (id === 'udin'){ aLx = -0.85 + Math.sin(wt*11)*0.16; aRx = -0.85 + Math.sin(wt*11+Math.PI)*0.16; hZ = Math.sin(wt*5)*0.07; hX = 0.1; }
+      else if (id === 'vision-agent-03'){ hY = Math.sin(wt*1.4)*0.5; aLx = -0.3; aRx = -0.3; }
+      else if (id === 'research-agent-01'){ aLx = -0.85 + Math.sin(wt*10)*0.15; aRx = -0.85 + Math.sin(wt*10+Math.PI)*0.15; hX = 0.12; }
+      else if (id === 'coding-agent-02'){ aLx = -1.0 + Math.sin(wt*12)*0.14; aRx = -1.0 + Math.sin(wt*12+Math.PI)*0.14; hX = 0.22; }
+      else { aLx = -0.85 + Math.sin(wt*9)*0.16; aRx = -0.85 + Math.sin(wt*9+Math.PI)*0.16; hX = 0.08; hY = Math.sin(wt*0.8)*0.15; }
+    } else if (frozen){ aLx = 0.15; aRx = 0.15; hX = 0.28; }
+    if (r.hop >= 0){ const he = Math.sin(Math.min(1, r.hop/0.9) * Math.PI); aLz = 0.14 + 2.4*he; aRz = -0.14 - 2.4*he; }
+    const ak = 1 - Math.exp(-8*dt);
+    r.armL.pivot.rotation.x += (aLx - r.armL.pivot.rotation.x) * ak;
+    r.armL.pivot.rotation.z += (aLz - r.armL.pivot.rotation.z) * ak;
+    r.armR.pivot.rotation.x += (aRx - r.armR.pivot.rotation.x) * ak;
+    r.armR.pivot.rotation.z += (aRz - r.armR.pivot.rotation.z) * ak;
+    r.headG.rotation.x += (hX - r.headG.rotation.x) * ak;
+    r.headG.rotation.y += (hY - r.headG.rotation.y) * ak;
+    r.headG.rotation.z += (hZ - r.headG.rotation.z) * ak;
+    if (r.core) r.core.material.emissiveIntensity = 0.8 + Math.sin(t*3 + r.phase)*0.25;
+    if (r.recDot) r.recDot.material.emissiveIntensity = 1.2 + Math.sin(t*6)*0.8;
+    if (r.lensRing) r.lensRing.material.emissiveIntensity = 1 + Math.sin(t*2.5)*0.5;
+    if (r.antTip) r.antTip.material.emissiveIntensity = 1.1 + Math.sin(t*4 + r.phase)*0.6;
+  }
+}
+
+/* ----- Kamera orbit kustom ----- */
+let theta = 0.55, phi = 1.02, radius = 9.5;
+const camTarget = new THREE.Vector3(0, 1.05, -0.7);
+function applyCam(){
+  camera.position.set(
+    camTarget.x + radius * Math.sin(phi) * Math.sin(theta),
+    camTarget.y + radius * Math.cos(phi),
+    camTarget.z + radius * Math.sin(phi) * Math.cos(theta));
+  camera.lookAt(camTarget);
+}
+const ptrs = new Map(); let pinchD = 0;
+canvas.addEventListener('pointerdown', e => {
+  ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY });
+  if (ptrs.size === 2){ const p = [...ptrs.values()]; pinchD = Math.hypot(p[0].x-p[1].x, p[0].y-p[1].y); }
+  canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener('pointermove', e => {
+  const p = ptrs.get(e.pointerId); if (!p) return;
+  const dx = e.clientX - p.x, dy = e.clientY - p.y;
+  p.x = e.clientX; p.y = e.clientY;
+  if (ptrs.size === 1){
+    theta -= dx * 0.0052;
+    phi = Math.max(0.32, Math.min(1.45, phi - dy * 0.0052));
+  } else if (ptrs.size === 2){
+    const q = [...ptrs.values()];
+    const d = Math.hypot(q[0].x-q[1].x, q[0].y-q[1].y);
+    if (pinchD > 0) radius = Math.max(4, Math.min(16, radius * (pinchD / d)));
+    pinchD = d;
+  }
+});
+function endPtr(e){
+  const p = ptrs.get(e.pointerId);
+  if (p && Math.hypot(e.clientX - p.sx, e.clientY - p.sy) < 7) handleTap(e);
+  ptrs.delete(e.pointerId);
+}
+canvas.addEventListener('pointerup', endPtr);
+canvas.addEventListener('pointercancel', e => ptrs.delete(e.pointerId));
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  radius = Math.max(4, Math.min(16, radius * (1 + e.deltaY * 0.001)));
+}, { passive: false });
+
+/* ----- Klik robot = pause/resume ----- */
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+function handleTap(e){
+  const rect = canvas.getBoundingClientRect();
+  ndc.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  ndc.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+  ray.setFromCamera(ndc, camera);
+  const hits = ray.intersectObjects(Object.values(robots).map(r => r.g), true);
+  if (!hits.length) return;
+  let o = hits[0].object;
+  while (o && !o.userData.agentId) o = o.parent;
+  if (!o || !Office.lastState) return;
+  const ag = Office.lastState.agents.find(a => a.id === o.userData.agentId);
+  if (!ag) return;
+  const wantPaused = ag.status !== 'paused';
+  (wantPaused
+    ? sbReq('POST', 'agent_pause', { agent: ag.id, paused: true, updated_at: new Date().toISOString() }, 'resolution=merge-duplicates,return=minimal')
+    : sbReq('DELETE', 'agent_pause?agent=eq.' + encodeURIComponent(ag.id))
+  ).then(poll).catch(()=>{});
+}
+
+/* ----- Update dari /api/state ----- */
+function noteDone(r, a){
+  if (a.last_done_ts && a.last_done_ts !== r.lastDone){
+    const first = !r.seen;
+    r.lastDone = a.last_done_ts; r.seen = true;
+    if (!first) r.hop = 0;
+  }
+}
+const Office = {
+  lastState: null,
+  resize(){
+    const w = wrap.clientWidth, h = wrap.clientHeight;
+    if (!w || !h) return;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h; camera.updateProjectionMatrix();
+  },
+  update(st){
+    this.lastState = st;
+    if (!st || !st.roster) return;
+    st.roster.forEach(cfg => { if (!robots[cfg.id]) makeRobot(cfg); });
+    statusLampMat.emissive.setHex(st.dispatch_paused ? 0xfbbf24 : 0x34d399);
+    const seated = st.agents.filter(a => a.task), standing = st.agents.filter(a => !a.task);
+    seated.forEach((a, i) => {
+      const r = robots[a.id]; if (!r) return;
+      r.target.pos.set(SEAT_X[i % SEAT_X.length], 0, SEAT_Z);
+      r.target.rotY = Math.PI; r.target.sitting = true; r.status = a.status;
+      r.ring.material.color.setHex(a.status === 'paused' ? 0xfbbf24 : 0x34d399);
+      noteDone(r, a);
+    });
+    standing.forEach((a, i) => {
+      const r = robots[a.id]; if (!r) return;
+      r.target.pos.set(BACK_X[i % BACK_X.length], 0, BACK_Z);
+      r.target.rotY = 0; r.target.sitting = false; r.status = a.status;
+      r.ring.material.color.setHex(a.status === 'paused' ? 0xfbbf24 : 0x6b7280);
+      noteDone(r, a);
+    });
+  }
+};
+window.__office = Office;
+
+/* ----- Loop ----- */
+const clk = new THREE.Clock();
+let codeAcc = 0, chartAcc = 0;
+function tick(){
+  requestAnimationFrame(tick);
+  const dt = Math.min(clk.getDelta(), 0.05), t = clk.elapsedTime;
+  const visible = wrap.clientWidth > 0 && document.getElementById('view-office').classList.contains('active');
+  if (!visible) return;
+  animateRobots(dt, t);
+  codeAcc += dt; if (codeAcc > 0.4){ codeAcc = 0; codeOff += 17; drawCode(); }
+  chartAcc += dt; if (chartAcc > 0.2){
+    chartAcc = 0;
+    const last = chData[chData.length-1];
+    chData.push(Math.max(0.08, Math.min(0.95, last + (Math.random()-0.5)*0.22)));
+    chData.shift(); drawChart();
+  }
+  applyCam();
+  renderer.render(scene, camera);
+}
+window.addEventListener('resize', () => Office.resize());
+if (window.ResizeObserver) new ResizeObserver(() => Office.resize()).observe(wrap);
+Office.resize();
+if (window.innerWidth <= 768 && document.getElementById('view-office').classList.contains('active'))
+  document.body.classList.add('office-open');
+tick();
+})();
+</script>
+</body>
+</html>
