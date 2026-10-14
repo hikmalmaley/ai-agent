@@ -67,3 +67,11 @@ Di server tempat AI agent berjalan (sudah disiapkan):
 - **Keamanan**: anon key + RLS. Siapa pun yang memegang URL+anon key bisa membaca
   semua dan *menulis baris baru* (event/antrean). Untuk dashboard pribadi ini
   risikonya diterima; `service_role` key tetap rahasia dan tidak dipakai di mana pun.
+
+## Nama agent di dashboard
+
+Dashboard menampilkan `muse` sebagai `azul`, `udin` sebagai `sulz`, dan `aris`
+sebagai `maley`. ID lama tetap dipakai saat membaca snapshot dan mengirim antrean
+atau status pause agar sesuai dengan collector yang berjalan di server asal.
+Query skema Supabase di `supabase-schema.sql` tidak menetapkan nama agent; untuk
+mengganti ID agent yang sebenarnya, ubah juga konfigurasi/source collector.
