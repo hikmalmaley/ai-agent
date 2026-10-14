@@ -1,4 +1,4 @@
--- ============================================================
+editor-- ============================================================
 -- Mission Control — skema Supabase
 -- Cara pakai: buka Supabase Dashboard → SQL Editor → paste seluruh
 -- file ini → Run. Selesai dalam sekali jalan.
