@@ -868,6 +868,8 @@ const Office = {
     this.lastState = st;
     if (!st || !st.roster) return;
     st.roster.forEach(cfg => { if (!robots[cfg.id]) makeRobot(cfg); });
+    { const wantIds = new Set(st.roster.map(c => c.id));
+      for (const rid of Object.keys(robots)) if (!wantIds.has(rid)) { scene.remove(robots[rid].g); delete robots[rid]; } }
     statusLampMat.emissive.setHex(st.dispatch_paused ? 0xfbbf24 : 0x34d399);
     const seated = st.agents.filter(a => a.task), standing = st.agents.filter(a => !a.task);
     seated.forEach((a, i) => {
