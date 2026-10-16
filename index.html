@@ -453,8 +453,7 @@ floor.rotation.x = -Math.PI/2; floor.receiveShadow = true; scene.add(floor);
 const rug = new THREE.Mesh(new THREE.CircleGeometry(3.6, 40), M(0x1a2130, 1, 0));
 rug.rotation.x = -Math.PI/2; rug.position.set(0, 0.012, -1.4); rug.receiveShadow = true; scene.add(rug);
 box(18, 5.5, 0.24, M(0x0f131a, 1, 0), 0, 2.75, -4.6);          // dinding belakang
-box(0.24, 5.5, 14, M(0x0e1219, 1, 0), -8.6, 2.75, 0);          // dinding kiri
-box(0.24, 5.5, 14, M(0x0e1219, 1, 0), 8.6, 2.75, 0);           // dinding kanan
+// dinding kiri & kanan dicopot (2026-10-16) biar POV samping tidak terhalang
 
 /* ----- Jendela kota malam ----- */
 (function(){
