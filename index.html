@@ -596,6 +596,151 @@ makeMonitor(0.85, chTex, -0.14);
   bulb.position.set(-5.6,2.62,-3.2); scene.add(bulb);
   const pl = new THREE.PointLight(0xffd9a0, 0.55, 7); pl.position.set(-5.6,2.5,-3.0); scene.add(pl);
 })();
+
+/* ================= RUANG TRADING maleyMarginCall ================= */
+const TRX = 6.2, TRZ = 1.6; // pusat ruang trading
+const TRADE = { side:'SELL', symbol:'XAUUSD', entry:4176, sl:4187, price:null, hist:[], lastOk:0 };
+const [tchC, tchX] = mkCanvas(360, 220);
+const tradeChartTex = new THREE.CanvasTexture(tchC);
+const [tbuC, tbuX] = mkCanvas(512, 300);
+const tradeBubTex = new THREE.CanvasTexture(tbuC);
+function roundRectPath(x, px, py, w, h, r){
+  x.beginPath();
+  x.moveTo(px+r, py);
+  x.arcTo(px+w, py, px+w, py+h, r);
+  x.arcTo(px+w, py+h, px, py+h, r);
+  x.arcTo(px, py+h, px, py, r);
+  x.arcTo(px, py, px+w, py, r);
+  x.closePath();
+}
+function tradePnl(){ return TRADE.price == null ? null : (TRADE.entry - TRADE.price); }
+function drawTradeChart(){
+  const x = tchX, W = 360, H = 220;
+  x.fillStyle = '#0d1117'; x.fillRect(0,0,W,H);
+  x.textAlign = 'left';
+  x.fillStyle = '#fbbf24'; x.font = 'bold 15px Inter, sans-serif';
+  x.fillText('XAUUSD  •  LIVE', 10, 20);
+  if (TRADE.price != null){
+    x.fillStyle = '#ffffff'; x.font = 'bold 17px ui-monospace, Menlo, monospace'; x.textAlign = 'right';
+    x.fillText(TRADE.price.toFixed(2), W-10, 20); x.textAlign = 'left';
+  }
+  x.strokeStyle = 'rgba(255,255,255,.07)'; x.lineWidth = 1;
+  for (let gy = 40; gy < H; gy += 36){ x.beginPath(); x.moveTo(0,gy); x.lineTo(W,gy); x.stroke(); }
+  const pts = TRADE.hist.slice(-48);
+  const ref = [TRADE.entry, TRADE.sl].concat(pts.length ? pts : [TRADE.entry]);
+  let mn = Math.min.apply(null, ref), mx = Math.max.apply(null, ref);
+  if (!(mx > mn)){ mn -= 1; mx += 1; }
+  const pad = (mx - mn) * 0.3 || 1; mn -= pad; mx += pad;
+  const Y = v => 34 + (1 - (v - mn)/(mx - mn)) * (H - 46);
+  x.setLineDash([6,4]);
+  x.strokeStyle = '#fbbf24'; x.lineWidth = 1.5;
+  x.beginPath(); x.moveTo(0, Y(TRADE.entry)); x.lineTo(W, Y(TRADE.entry)); x.stroke();
+  x.fillStyle = '#fbbf24'; x.font = '11px Inter, sans-serif'; x.fillText('ENTRY 4176', 6, Y(TRADE.entry)-5);
+  x.strokeStyle = '#f87171';
+  x.beginPath(); x.moveTo(0, Y(TRADE.sl)); x.lineTo(W, Y(TRADE.sl)); x.stroke();
+  x.fillStyle = '#f87171'; x.fillText('SL 4187', 6, Y(TRADE.sl)-5);
+  x.setLineDash([]);
+  if (pts.length > 1){
+    const grad = x.createLinearGradient(0,0,0,H);
+    grad.addColorStop(0,'rgba(251,191,36,.45)'); grad.addColorStop(1,'rgba(251,191,36,.03)');
+    x.beginPath(); x.moveTo(0,H);
+    pts.forEach((v,i) => x.lineTo(i/(pts.length-1)*W, Y(v)));
+    x.lineTo(W,H); x.closePath(); x.fillStyle = grad; x.fill();
+    x.beginPath();
+    pts.forEach((v,i) => { const px=i/(pts.length-1)*W, py=Y(v); i?x.lineTo(px,py):x.moveTo(px,py); });
+    x.strokeStyle = '#fbbf24'; x.lineWidth = 2; x.stroke();
+    x.fillStyle = '#fbbf24'; x.beginPath(); x.arc(W-3, Y(pts[pts.length-1]), 4, 0, 7); x.fill();
+  } else {
+    x.fillStyle = '#8f96a3'; x.font = '13px Inter, sans-serif';
+    x.fillText('menghubungkan harga…', 10, H/2);
+  }
+  tradeChartTex.needsUpdate = true;
+}
+function drawTradeBubble(){
+  const x = tbuX, W = 512, H = 300;
+  x.clearRect(0,0,W,H);
+  const pnl = tradePnl();
+  const up = pnl == null ? true : pnl >= 0;
+  const col = pnl == null ? '#9aa0aa' : (up ? '#34d399' : '#f87171');
+  const stale = Date.now() - TRADE.lastOk > 90000;
+  x.fillStyle = 'rgba(8,10,14,0.93)';
+  roundRectPath(x, 8, 8, W-16, H-52, 24); x.fill();
+  x.strokeStyle = col; x.lineWidth = 3;
+  roundRectPath(x, 8, 8, W-16, H-52, 24); x.stroke();
+  x.fillStyle = 'rgba(8,10,14,0.93)';
+  x.beginPath(); x.moveTo(W/2-16, H-44); x.lineTo(W/2+16, H-44); x.lineTo(W/2, H-14); x.closePath(); x.fill();
+  x.textAlign = 'center';
+  x.fillStyle = col; x.font = 'bold 30px Inter, sans-serif';
+  x.fillText((up ? '🟢' : '🔴') + ' SELL XAUUSD', W/2, 60);
+  x.fillStyle = '#c9ced8'; x.font = '24px Inter, sans-serif';
+  x.fillText('Entry 4176   •   SL 4187', W/2, 102);
+  x.fillStyle = '#ffffff'; x.font = 'bold 36px ui-monospace, Menlo, monospace';
+  x.fillText(TRADE.price == null ? '—' : TRADE.price.toFixed(2), W/2, 156);
+  x.fillStyle = col; x.font = 'bold 30px ui-monospace, Menlo, monospace';
+  x.fillText(pnl == null ? 'menghubungkan…' : ((pnl >= 0 ? '+' : '-') + '$' + Math.abs(pnl).toFixed(2)), W/2, 206);
+  x.fillStyle = stale ? '#fbbf24' : col; x.font = 'bold 20px Inter, sans-serif';
+  x.fillText(stale ? '● DATA TERLAMBAT' : '● RUNNING', W/2, 238);
+  tradeBubTex.needsUpdate = true;
+}
+drawTradeChart();
+drawTradeBubble();
+async function fetchGoldPrice(){
+  try{
+    const r = await fetch('https://api.gold-api.com/price/XAU');
+    if (!r.ok) return;
+    const j = await r.json();
+    const pv = Number(j && j.price);
+    if (pv > 0){
+      TRADE.price = pv; TRADE.lastOk = Date.now();
+      TRADE.hist.push(pv); if (TRADE.hist.length > 90) TRADE.hist.shift();
+      drawTradeChart(); drawTradeBubble();
+    }
+  }catch(e){}
+}
+fetchGoldPrice();
+setInterval(fetchGoldPrice, 30000);
+/* ----- Geometri ruang trading ----- */
+(function(){
+  const inlay = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 4.2), M(0x1a1410, 0.95, 0));
+  inlay.rotation.x = -Math.PI/2; inlay.position.set(TRX, 0.015, TRZ); inlay.receiveShadow = true; scene.add(inlay);
+  const edgeM = new THREE.MeshBasicMaterial({ color: 0xfbbf24 });
+  [[0,-2.1,4.6,0.06],[0,2.1,4.6,0.06],[-2.3,0,0.06,4.2],[2.3,0,0.06,4.2]].forEach(([ox,oz,w,d]) => {
+    const e = new THREE.Mesh(new THREE.BoxGeometry(w, 0.025, d), edgeM);
+    e.position.set(TRX+ox, 0.02, TRZ+oz); scene.add(e);
+  });
+  const td = M(0x2b2418, .55, .25);
+  const top = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.1, 1.0), td);
+  top.position.set(TRX, 0.8, TRZ-0.9); top.castShadow = true; top.receiveShadow = true; scene.add(top);
+  [[-1.1,0.25],[1.1,0.25],[-1.1,1.15],[1.1,1.15]].forEach(([lx,lz]) => {
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.8, 0.1), td);
+    leg.position.set(TRX+lx, 0.4, lz); leg.castShadow = true; scene.add(leg);
+  });
+  const tch = makeChair(); tch.position.set(TRX, 0, TRZ+0.35);
+  const mg = new THREE.Group();
+  const shell = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.95, 0.07), M(0x11141b,.5,.4));
+  shell.castShadow = true; mg.add(shell);
+  const scr = new THREE.Mesh(new THREE.PlaneGeometry(1.38, 0.83), new THREE.MeshBasicMaterial({ map: tradeChartTex }));
+  scr.position.z = 0.037; mg.add(scr);
+  const neck = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.34, 0.08), M(0x11141b,.5,.4)); neck.position.y = -0.6; mg.add(neck);
+  const foot = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.05, 0.32), M(0x11141b,.5,.4)); foot.position.y = -0.78; mg.add(foot);
+  mg.position.set(TRX, 1.66, TRZ-0.95); scene.add(mg);
+  const [tc, tx] = mkCanvas(1024, 170);
+  tx.fillStyle = 'rgba(10,8,4,0.88)'; tx.fillRect(0,0,1024,170);
+  tx.strokeStyle = 'rgba(251,191,36,0.55)'; tx.lineWidth = 4; tx.strokeRect(4,4,1016,162);
+  const grd = tx.createLinearGradient(0,30,0,110);
+  grd.addColorStop(0,'#fde68a'); grd.addColorStop(1,'#f59e0b');
+  tx.fillStyle = grd; tx.textAlign = 'center'; tx.font = 'bold 78px Inter, sans-serif';
+  tx.fillText('maleyMarginCall', 512, 98);
+  tx.fillStyle = '#fbbf24'; tx.font = '26px Inter, sans-serif';
+  tx.fillText('T R A D I N G   R O O M   •   X A U U S D   L I V E', 512, 140);
+  const sign = new THREE.Mesh(new THREE.PlaneGeometry(3.8, 0.63),
+    new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(tc), transparent: true, side: THREE.DoubleSide }));
+  sign.position.set(TRX, 3.0, TRZ-0.9); scene.add(sign);
+  const trLight = new THREE.PointLight(0xfbbf24, 0.55, 7);
+  trLight.position.set(TRX, 2.6, TRZ); scene.add(trLight);
+})();
+/* ================= AKHIR RUANG TRADING ================= */
+
 /* Lampu status global */
 const statusLampMat = new THREE.MeshStandardMaterial({ color:0x111111, emissive:0x34d399, emissiveIntensity:1.2 });
 (function(){
@@ -886,6 +1031,20 @@ const Office = {
       r.ring.material.color.setHex(a.status === 'paused' ? 0xfbbf24 : 0x6b7280);
       noteDone(r, a);
     });
+    /* asep standby di ruang trading maleyMarginCall */
+    const ra = robots['asep'];
+    if (ra){
+      const aa = st.agents.find(a => a.id === 'asep');
+      ra.target.pos.set(TRX, 0, TRZ+0.35);
+      ra.target.rotY = Math.PI; ra.target.sitting = true;
+      if (aa){ ra.status = aa.status; noteDone(ra, aa); }
+      ra.ring.material.color.setHex(0xfbbf24);
+      if (!ra.tradeBubble){
+        const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tradeBubTex, depthTest: false, transparent: true, fog: false }));
+        sp.scale.set(2.35, 1.38, 1); sp.position.y = 2.9; sp.renderOrder = 11;
+        ra.g.add(sp); ra.tradeBubble = sp;
+      }
+    }
   }
 };
 window.__office = Office;
