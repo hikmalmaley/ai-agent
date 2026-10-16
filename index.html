@@ -598,7 +598,7 @@ makeMonitor(0.85, chTex, -0.14);
 
 /* ================= RUANG TRADING maleyMarginCall ================= */
 const TRX = 6.2, TRZ = 1.6; // pusat ruang trading
-const TRADE = { active:false, side:'SELL', symbol:'XAUUSD', entry:4176, sl:4187, price:null, hist:[], lastOk:0 };
+const TRADE = { active:true, side:'SELL', symbol:'XAUUSD', entry:4184, sl:4195, price:null, hist:[], lastOk:0 };
 const [tchC, tchX] = mkCanvas(360, 220);
 const tradeChartTex = new THREE.CanvasTexture(tchC);
 const [tbuC, tbuX] = mkCanvas(512, 300);
@@ -634,10 +634,10 @@ function drawTradeChart(){
   x.setLineDash([6,4]);
   x.strokeStyle = '#fbbf24'; x.lineWidth = 1.5;
   x.beginPath(); x.moveTo(0, Y(TRADE.entry)); x.lineTo(W, Y(TRADE.entry)); x.stroke();
-  x.fillStyle = '#fbbf24'; x.font = '11px Inter, sans-serif'; x.fillText('ENTRY 4176', 6, Y(TRADE.entry)-5);
+  x.fillStyle = '#fbbf24'; x.font = '11px Inter, sans-serif'; x.fillText('ENTRY 4184', 6, Y(TRADE.entry)-5);
   x.strokeStyle = '#f87171';
   x.beginPath(); x.moveTo(0, Y(TRADE.sl)); x.lineTo(W, Y(TRADE.sl)); x.stroke();
-  x.fillStyle = '#f87171'; x.fillText('SL 4187', 6, Y(TRADE.sl)-5);
+  x.fillStyle = '#f87171'; x.fillText('SL 4195', 6, Y(TRADE.sl)-5);
   x.setLineDash([]);
   if (pts.length > 1){
     const grad = x.createLinearGradient(0,0,0,H);
@@ -672,7 +672,7 @@ function drawTradeBubble(){
   x.fillStyle = col; x.font = 'bold 30px Inter, sans-serif';
   x.fillText((up ? '🟢' : '🔴') + ' SELL XAUUSD', W/2, 60);
   x.fillStyle = '#c9ced8'; x.font = '24px Inter, sans-serif';
-  x.fillText('Entry 4176   •   SL 4187', W/2, 102);
+  x.fillText('Entry 4184   •   SL 4195', W/2, 102);
   x.fillStyle = '#ffffff'; x.font = 'bold 36px ui-monospace, Menlo, monospace';
   x.fillText(TRADE.price == null ? '—' : TRADE.price.toFixed(2), W/2, 156);
   x.fillStyle = col; x.font = 'bold 30px ui-monospace, Menlo, monospace';
