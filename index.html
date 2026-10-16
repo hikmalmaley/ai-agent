@@ -152,7 +152,7 @@ details.sys summary{cursor:pointer; color:var(--muted); font-size:13px; padding:
         <div class="h-label">Tambah quick task</div>
         <div class="row">
           <input type="text" id="qPrompt" placeholder="Tulis tugas singkat…">
-          <button class="btn" data-q="asep">🎨 Design</button>
+          <button class="btn" data-q="ceyper">🎨 Design</button>
         </div>
       </div>
       <div class="card"><div class="h-label">Antrean <span class="pill blue" id="queueCount">0</span></div><div id="queueList"></div></div>
@@ -197,7 +197,7 @@ function statusPill(st){
 const AGENT_DISPLAY_NAMES = Object.freeze({
   maley: 'maley',
   udin: 'udin',
-  asep: 'asep',
+  ceyper: 'ceyper',
 });
 function displayAgentName(id){
   return AGENT_DISPLAY_NAMES[id] || id;
@@ -394,7 +394,7 @@ function renderFleet(){
 }
 
 function displayAgentNamesInText(text){
-  return String(text).replace(/\b(maley|udin|asep)\b/g, id => displayAgentName(id));
+  return String(text).replace(/\b(maley|udin|ceyper)\b/g, id => displayAgentName(id));
 }
 
 function renderLog(){
@@ -824,7 +824,7 @@ function makeRobot(cfg){
     rec.eyeL = mkEye(-0.11); rec.eyeR = mkEye(0.11);
   /* --- Aksesori per peran --- */
   const em = (c, i) => new THREE.MeshStandardMaterial({ color:0x111111, emissive:c, emissiveIntensity:i||1 });
-  if (cfg.id === 'asep'){
+  if (cfg.id === 'ceyper'){
     const beret = new THREE.Mesh(new THREE.CylinderGeometry(0.21, 0.235, 0.085, 18), mat(0x7c3aed, .7, .1));
     beret.position.set(0.07, 0.235, 0); beret.rotation.z = 0.2; beret.castShadow = true; headG.add(beret);
     const tablet = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.025, 0.26), mat(0x141821, .4, .4));
@@ -909,7 +909,7 @@ function animateRobots(dt, t){
     let aLx=0, aLz=0.14, aRx=0, aRz=-0.14, hX=0, hY=0, hZ=0;
     if (working && !frozen){
       r.workT += dt; const wt = r.workT;
-      if (id === 'asep'){ aRx = -0.7 + Math.sin(wt*2.6)*0.35; aRz = Math.cos(wt*2.6)*0.4 - 0.2; aLx = -0.55; hX = 0.18; }
+      if (id === 'ceyper'){ aRx = -0.7 + Math.sin(wt*2.6)*0.35; aRz = Math.cos(wt*2.6)*0.4 - 0.2; aLx = -0.55; hX = 0.18; }
       else if (id === 'udin'){ aLx = -0.85 + Math.sin(wt*11)*0.16; aRx = -0.85 + Math.sin(wt*11+Math.PI)*0.16; hZ = Math.sin(wt*5)*0.07; hX = 0.1; }
       else { aLx = -0.85 + Math.sin(wt*9)*0.16; aRx = -0.85 + Math.sin(wt*9+Math.PI)*0.16; hX = 0.08; hY = Math.sin(wt*0.8)*0.15; }
     } else if (frozen){ aLx = 0.15; aRx = 0.15; hX = 0.28; }
@@ -1031,10 +1031,10 @@ const Office = {
       r.ring.material.color.setHex(a.status === 'paused' ? 0xfbbf24 : 0x6b7280);
       noteDone(r, a);
     });
-    /* asep standby di ruang trading maleyMarginCall */
-    const ra = robots['asep'];
+    /* ceyper standby di ruang trading maleyMarginCall */
+    const ra = robots['ceyper'];
     if (ra){
-      const aa = st.agents.find(a => a.id === 'asep');
+      const aa = st.agents.find(a => a.id === 'ceyper');
       ra.target.pos.set(TRX, 0, TRZ+0.35);
       ra.target.rotY = Math.PI; ra.target.sitting = true;
       if (aa){ ra.status = aa.status; noteDone(ra, aa); }
@@ -1054,7 +1054,7 @@ const Office = {
       if (au){ ru.status = au.status; noteDone(ru, au); }
       ru.ring.material.color.setHex(ru.status === 'paused' ? 0xfbbf24 : 0x34d399);
     }
-    /* maley berdiri di dekat asep seperti memantau */
+    /* maley berdiri di dekat ceyper seperti memantau */
     const rm = robots['maley'];
     if (rm){
       const am = st.agents.find(a => a.id === 'maley');
