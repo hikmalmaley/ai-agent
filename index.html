@@ -780,7 +780,7 @@ function makeRobot(cfg){
   const inner = new THREE.Group(); g.add(inner);
   const mat = (c,r,m) => new THREE.MeshStandardMaterial({ color:c, roughness:r==null?0.65:r, metalness:m==null?0.25:m });
   const bodyMat = mat(0x2b3242), accMat = mat(colInt, 0.45, 0.5);
-  const rec = { id: cfg.id, g, inner, blink: 1+Math.random()*4, phase: Math.random()*6.28, hop: -1, seen: false, lastDone: null, sitK: 0, workT: 0, status: 'idle',
+  const rec = { id: cfg.id, g, inner, blink: 1+Math.random()*4, phase: Math.random()*6.28, hop: -1, seen: false, lastDone: null, sitK: 0, workT: 0, status: 'idle', pin: false,
     target: { pos: new THREE.Vector3(), rotY: 0, sitting: false } };
   rec.wanderT = 2 + Math.random()*4;
   rec.wanderTarget = new THREE.Vector3((Math.random()-0.5)*7, 0, 1.5 + Math.random()*2.5);
@@ -863,7 +863,7 @@ function animateRobots(dt, t){
     const r = robots[id];
     const k = 1 - Math.exp(-3.2*dt);
     // Mondar-mandir: robot yang berdiri (tanpa tugas) jalan santai biar hidup
-    if (!r.target.sitting){
+    if (!r.target.sitting && !r.pin){
       r.wanderT -= dt;
       const dxw = r.wanderTarget.x - r.g.position.x;
       const dzw = r.wanderTarget.z - r.g.position.z;
@@ -1044,6 +1044,25 @@ const Office = {
         sp.scale.set(2.35, 1.38, 1); sp.position.y = 2.9; sp.renderOrder = 11;
         ra.g.add(sp); ra.tradeBubble = sp;
       }
+    }
+    /* udin duduk di depan monitor tengah (meja utama) */
+    const ru = robots['udin'];
+    if (ru){
+      const au = st.agents.find(a => a.id === 'udin');
+      ru.target.pos.set(0.44, 0, SEAT_Z);
+      ru.target.rotY = Math.PI; ru.target.sitting = true;
+      if (au){ ru.status = au.status; noteDone(ru, au); }
+      ru.ring.material.color.setHex(ru.status === 'paused' ? 0xfbbf24 : 0x34d399);
+    }
+    /* maley berdiri di dekat asep seperti memantau */
+    const rm = robots['maley'];
+    if (rm){
+      const am = st.agents.find(a => a.id === 'maley');
+      rm.pin = true; rm.target.sitting = false;
+      rm.target.pos.set(TRX-1.7, 0, TRZ+0.9);
+      rm.target.rotY = Math.atan2(1.7, -0.55);
+      if (am){ rm.status = am.status; noteDone(rm, am); }
+      rm.ring.material.color.setHex(rm.status === 'paused' ? 0xfbbf24 : 0x6b7280);
     }
   }
 };
