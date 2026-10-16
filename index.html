@@ -598,7 +598,7 @@ makeMonitor(0.85, chTex, -0.14);
 
 /* ================= RUANG TRADING maleyMarginCall ================= */
 const TRX = 6.2, TRZ = 1.6; // pusat ruang trading
-const TRADE = { side:'SELL', symbol:'XAUUSD', entry:4176, sl:4187, price:null, hist:[], lastOk:0 };
+const TRADE = { active:false, side:'SELL', symbol:'XAUUSD', entry:4176, sl:4187, price:null, hist:[], lastOk:0 };
 const [tchC, tchX] = mkCanvas(360, 220);
 const tradeChartTex = new THREE.CanvasTexture(tchC);
 const [tbuC, tbuX] = mkCanvas(512, 300);
@@ -1043,6 +1043,7 @@ const Office = {
         sp.scale.set(2.35, 1.38, 1); sp.position.y = 2.9; sp.renderOrder = 11;
         ra.g.add(sp); ra.tradeBubble = sp;
       }
+      ra.tradeBubble.visible = TRADE.active;
     }
     /* udin duduk di depan monitor tengah (meja utama) */
     const ru = robots['udin'];
