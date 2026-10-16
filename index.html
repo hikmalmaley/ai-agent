@@ -697,7 +697,7 @@ async function fetchGoldPrice(){
   }catch(e){}
 }
 fetchGoldPrice();
-setInterval(fetchGoldPrice, 30000);
+setInterval(fetchGoldPrice, 10000);
 /* ----- Geometri ruang trading ----- */
 (function(){
   const inlay = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 4.2), M(0x1a1410, 0.95, 0));
