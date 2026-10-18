@@ -126,6 +126,7 @@ details.sys summary{cursor:pointer; color:var(--muted); font-size:13px; padding:
     <button data-view="tokens"><span class="ico">🔑</span><span class="lbl">Token Status</span></button>
     <button data-view="fleet"><span class="ico">🚀</span><span class="lbl">Agent Fleet</span></button>
     <button data-view="log"><span class="ico">📜</span><span class="lbl">Real-Time Log</span></button>
+    <button data-view="journal"><span class="ico">📈</span><span class="lbl">Jurnal Trading</span></button>
   </nav>
   <div class="side-foot" id="sideFoot">menghubungkan…</div>
 </aside>
@@ -166,6 +167,11 @@ details.sys summary{cursor:pointer; color:var(--muted); font-size:13px; padding:
     <section id="view-tokens" class="view"><div class="h-label">Pemakaian token</div><div id="tokenCard"></div></section>
     <section id="view-fleet" class="view"><div class="h-label">Armada agent</div><div class="grid" id="fleetGrid"></div></section>
     <section id="view-log" class="view"><div class="h-label">Log aktivitas real-time</div><pre id="logPre"></pre></section>
+    <section id="view-journal" class="view">
+      <div class="h-label">Ringkasan performa</div>
+      <div class="grid" id="journalStats"></div>
+      <div class="card"><div class="h-label">History trade</div><div id="journalTable" style="overflow-x:auto"></div></div>
+    </section>
   </main>
 </div>
 <script src="vendor/three.min.js"></script>
@@ -176,7 +182,47 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let S = null;
 
-const TITLES = { office:'maley Office', agents:'Agent Overview', queue:'Task Queue', system:'System Metrics', vps:'VPS Status', schedules:'Tugas Terjadwal', tokens:'Token Status', fleet:'Agent Fleet', log:'Real-Time Log' };
+const TITLES = { office:'maley Office', agents:'Agent Overview', queue:'Task Queue', system:'System Metrics', vps:'VPS Status', schedules:'Tugas Terjadwal', tokens:'Token Status', fleet:'Agent Fleet', log:'Real-Time Log', journal:'Jurnal Trading' };
+async function loadJournal(){
+  const box = document.getElementById('journalTable');
+  const stats = document.getElementById('journalStats');
+  try{
+    const r = await fetch('trading-journal.json', {cache:'no-store'});
+    if(!r.ok) throw 0;
+    const j = await r.json();
+    const tr = j.trades || [];
+    const closed = tr.filter(t => t.status === 'closed');
+    const wins = closed.filter(t => (t.result_usc||0) > 0).length;
+    const tot = closed.reduce((a,t) => a + (t.result_usc||0), 0);
+    const wr = closed.length ? Math.round(wins/closed.length*100) : 0;
+    const totCls = tot >= 0 ? '+' : '';
+    stats.innerHTML =
+      statCard('Total trade', closed.length + ' closed / ' + tr.length + ' total') +
+      statCard('Win rate', wr + '%') +
+      statCard('Total P/L', '<span style="color:' + (tot>=0?'var(--green)':'var(--red)') + '">' + totCls + tot + ' USC</span>') +
+      statCard('Akun', (j.account && j.account.type || 'cent') + ' · ' + (j.account && j.account.balance_usc || 0) + ' USC');
+    let rows = tr.slice().reverse().map(t => {
+      const pnl = t.result_usc == null ? '<span class="pill gray">OPEN</span>'
+        : '<span style="color:' + (t.result_usc>=0?'var(--green)':'var(--red)') + ';font-weight:600">' + (t.result_usc>=0?'+':'') + t.result_usc + '</span>';
+      const dir = t.direction === 'SELL' ? '<span class="pill red">SELL</span>' : '<span class="pill green">BUY</span>';
+      return '<tr><td>' + escJ(t.date) + '</td><td>' + escJ(t.pair) + '</td><td>' + dir + '</td>' +
+        '<td>' + t.entry + '</td><td>' + t.sl + '</td><td>' + (t.tp1||t.target_usc!=null?('+'+t.target_usc+' USC'):('—')) + '</td>' +
+        '<td>' + pnl + '</td><td style="max-width:280px">' + escJ(t.notes||'') + '</td></tr>';
+    }).join('');
+    box.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:12.5px"><thead><tr style="text-align:left;color:var(--muted)">' +
+      '<th style="padding:8px">Tanggal</th><th style="padding:8px">Pair</th><th style="padding:8px">Arah</th>' +
+      '<th style="padding:8px">Entry</th><th style="padding:8px">SL</th><th style="padding:8px">Target</th>' +
+      '<th style="padding:8px">P/L</th><th style="padding:8px">Catatan</th></tr></thead><tbody>' + rows + '</tbody></table>';
+  }catch(e){ box.innerHTML = '<span style="color:var(--muted)">Belum ada data jurnal.</span>'; stats.innerHTML=''; }
+}
+function statCard(label, val){
+  return '<div class="card" style="margin-bottom:0"><div class="h-label">' + label + '</div>' +
+    '<div style="font-size:22px;font-weight:700">' + val + '</div></div>';
+}
+function escJ(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+const _showView = showView;
+showView = function(name){ _showView(name); if(name==='journal') loadJournal(); };
+loadJournal();
 document.querySelectorAll('#sidebar nav button').forEach(b => b.addEventListener('click', () => showView(b.dataset.view)));
 function showView(name){
   document.querySelectorAll('#sidebar nav button').forEach(x => x.classList.toggle('active', x.dataset.view === name));
