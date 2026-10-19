@@ -644,7 +644,7 @@ makeMonitor(0.85, chTex, -0.14);
 
 /* ================= RUANG TRADING maleyMarginCall ================= */
 const TRX = 6.2, TRZ = 1.6; // pusat ruang trading
-const TRADE = { active:false, side:'SELL', symbol:'XAUUSD', entry:4184, sl:4195, price:null, hist:[], lastOk:0 };
+const TRADE = { active:false, pending:true, tp1done:false, side:'SELL', order:'LIMIT', symbol:'XAUUSD', entry:4196, sl:4211, tp1:4173, tp2:4161, price:null, hist:[], lastOk:0 };
 const [tchC, tchX] = mkCanvas(360, 220);
 const tradeChartTex = new THREE.CanvasTexture(tchC);
 const [tbuC, tbuX] = mkCanvas(512, 300);
@@ -704,6 +704,52 @@ function drawTradeChart(){
 function drawTradeBubble(){
   const x = tbuX, W = 512, H = 300;
   x.clearRect(0,0,W,H);
+  if (TRADE.pending){
+    const pc = '#fbbf24';
+    x.fillStyle = 'rgba(8,10,14,0.93)';
+    roundRectPath(x, 8, 8, W-16, H-52, 24); x.fill();
+    x.strokeStyle = pc; x.lineWidth = 3;
+    roundRectPath(x, 8, 8, W-16, H-52, 24); x.stroke();
+    x.fillStyle = 'rgba(8,10,14,0.93)';
+    x.beginPath(); x.moveTo(W/2-16, H-44); x.lineTo(W/2+16, H-44); x.lineTo(W/2, H-14); x.closePath(); x.fill();
+    x.textAlign = 'center';
+    x.fillStyle = pc; x.font = 'bold 30px Inter, sans-serif';
+    x.fillText('\u23F3 ' + TRADE.side + ' LIMIT ' + TRADE.symbol, W/2, 60);
+    x.fillStyle = '#c9ced8'; x.font = '24px Inter, sans-serif';
+    x.fillText('Limit @ ' + TRADE.entry.toFixed(0) + ' \u2014 menunggu kejemput', W/2, 104);
+    x.fillStyle = '#ffffff'; x.font = 'bold 26px Inter, sans-serif';
+    x.fillText('harga skrg: ' + (TRADE.price == null ? '\u2014' : TRADE.price.toFixed(2)), W/2, 152);
+    x.fillStyle = '#9aa0aa'; x.font = '22px ui-monospace, Menlo, monospace';
+    const pdist = TRADE.price == null ? '\u2014' : Math.abs(TRADE.entry - TRADE.price).toFixed(1) + ' poin lagi';
+    x.fillText(pdist, W/2, 192);
+    x.fillStyle = '#c9ced8'; x.font = '20px Inter, sans-serif';
+    x.fillText('SL ' + TRADE.sl.toFixed(0) + '  \u2022  TP1 ' + TRADE.tp1.toFixed(0) + '  \u2022  TP2 ' + TRADE.tp2.toFixed(0), W/2, 234);
+    tradeBubTex.needsUpdate = true;
+    return;
+  }
+  if (TRADE.tp1done && TRADE.active){
+    const qc = '#34d399';
+    x.fillStyle = 'rgba(8,10,14,0.93)';
+    roundRectPath(x, 8, 8, W-16, H-52, 24); x.fill();
+    x.strokeStyle = qc; x.lineWidth = 3;
+    roundRectPath(x, 8, 8, W-16, H-52, 24); x.stroke();
+    x.fillStyle = 'rgba(8,10,14,0.93)';
+    x.beginPath(); x.moveTo(W/2-16, H-44); x.lineTo(W/2+16, H-44); x.lineTo(W/2, H-14); x.closePath(); x.fill();
+    x.textAlign = 'center';
+    x.fillStyle = qc; x.font = 'bold 30px Inter, sans-serif';
+    x.fillText('\u2705 TP1 KENA \u2014 partial 50%', W/2, 60);
+    x.fillStyle = '#c9ced8'; x.font = '24px Inter, sans-serif';
+    x.fillText(TRADE.side + ' ' + TRADE.symbol + ' @ ' + TRADE.entry.toFixed(0), W/2, 104);
+    const pnl2 = tradePnl();
+    x.fillStyle = '#ffffff'; x.font = 'bold 30px ui-monospace, Menlo, monospace';
+    x.fillText(pnl2 == null ? '\u2014' : ((pnl2 >= 0 ? '+' : '-') + '$' + Math.abs(pnl2).toFixed(2)), W/2, 156);
+    x.fillStyle = '#9aa0aa'; x.font = '22px Inter, sans-serif';
+    x.fillText('sisa 50% \u2192 TP2 ' + TRADE.tp2.toFixed(0), W/2, 204);
+    x.fillStyle = qc; x.font = 'bold 20px Inter, sans-serif';
+    x.fillText('\u25CF RUNNING', W/2, 238);
+    tradeBubTex.needsUpdate = true;
+    return;
+  }
   const pnl = tradePnl();
   const up = pnl == null ? true : pnl >= 0;
   const col = pnl == null ? '#9aa0aa' : (up ? '#34d399' : '#f87171');
@@ -1089,7 +1135,7 @@ const Office = {
         sp.scale.set(2.35, 1.38, 1); sp.position.y = 2.9; sp.renderOrder = 11;
         ra.g.add(sp); ra.tradeBubble = sp;
       }
-      ra.tradeBubble.visible = TRADE.active;
+      ra.tradeBubble.visible = TRADE.active || TRADE.pending;
     }
     /* udin duduk di depan monitor tengah (meja utama) */
     const ru = robots['udin'];
