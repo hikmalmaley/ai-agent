@@ -644,7 +644,7 @@ makeMonitor(0.85, chTex, -0.14);
 
 /* ================= RUANG TRADING maleyMarginCall ================= */
 const TRX = 6.2, TRZ = 1.6; // pusat ruang trading
-const TRADE = { active:false, pending:false, tp1done:false, side:'SELL', order:'LIMIT', symbol:'XAUUSD', entry:4178, sl:4193, tp1:4155, tp2:4143, price:null, hist:[], lastOk:0 };
+const TRADE = { active:true, pending:false, tp1done:false, side:'BUY', order:'LIMIT', symbol:'XAUUSD', entry:4143, sl:4128, tp1:4166, tp2:4178, price:null, hist:[], lastOk:0 };
 const [tchC, tchX] = mkCanvas(360, 220);
 const tradeChartTex = new THREE.CanvasTexture(tchC);
 const [tbuC, tbuX] = mkCanvas(512, 300);
@@ -658,7 +658,7 @@ function roundRectPath(x, px, py, w, h, r){
   x.arcTo(px, py, px+w, py, r);
   x.closePath();
 }
-function tradePnl(){ return TRADE.price == null ? null : (TRADE.entry - TRADE.price); }
+function tradePnl(){ if (TRADE.price == null) return null; return TRADE.side === 'BUY' ? (TRADE.price - TRADE.entry) : (TRADE.entry - TRADE.price); }
 function drawTradeChart(){
   const x = tchX, W = 360, H = 220;
   x.fillStyle = '#0d1117'; x.fillRect(0,0,W,H);
@@ -680,10 +680,10 @@ function drawTradeChart(){
   x.setLineDash([6,4]);
   x.strokeStyle = '#fbbf24'; x.lineWidth = 1.5;
   x.beginPath(); x.moveTo(0, Y(TRADE.entry)); x.lineTo(W, Y(TRADE.entry)); x.stroke();
-  x.fillStyle = '#fbbf24'; x.font = '11px Inter, sans-serif'; x.fillText('ENTRY 4184', 6, Y(TRADE.entry)-5);
+  x.fillStyle = '#fbbf24'; x.font = '11px Inter, sans-serif'; x.fillText('ENTRY ' + TRADE.entry.toFixed(0), 6, Y(TRADE.entry)-5);
   x.strokeStyle = '#f87171';
   x.beginPath(); x.moveTo(0, Y(TRADE.sl)); x.lineTo(W, Y(TRADE.sl)); x.stroke();
-  x.fillStyle = '#f87171'; x.fillText('SL 4195', 6, Y(TRADE.sl)-5);
+  x.fillStyle = '#f87171'; x.fillText('SL ' + TRADE.sl.toFixed(0), 6, Y(TRADE.sl)-5);
   x.setLineDash([]);
   if (pts.length > 1){
     const grad = x.createLinearGradient(0,0,0,H);
@@ -762,9 +762,9 @@ function drawTradeBubble(){
   x.beginPath(); x.moveTo(W/2-16, H-44); x.lineTo(W/2+16, H-44); x.lineTo(W/2, H-14); x.closePath(); x.fill();
   x.textAlign = 'center';
   x.fillStyle = col; x.font = 'bold 30px Inter, sans-serif';
-  x.fillText((up ? '🟢' : '🔴') + ' SELL XAUUSD', W/2, 60);
+  x.fillText((up ? '🟢' : '🔴') + ' ' + TRADE.side + ' ' + TRADE.symbol, W/2, 60);
   x.fillStyle = '#c9ced8'; x.font = '24px Inter, sans-serif';
-  x.fillText('Entry 4184   •   SL 4195', W/2, 102);
+  x.fillText('Entry ' + TRADE.entry.toFixed(0) + '   •   SL ' + TRADE.sl.toFixed(0), W/2, 102);
   x.fillStyle = '#ffffff'; x.font = 'bold 36px ui-monospace, Menlo, monospace';
   x.fillText(TRADE.price == null ? '—' : TRADE.price.toFixed(2), W/2, 156);
   x.fillStyle = col; x.font = 'bold 30px ui-monospace, Menlo, monospace';
