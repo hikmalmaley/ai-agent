@@ -393,12 +393,15 @@ makeChair(0, -0.85, 0);
 const monH = makeMonitor(headTex, 1.7); monH.position.set(0, 1.75, -2.75); scene.add(monH);
 
 makeDesk(-5.6, -2.4, 2.6, 0);                    // SEARCH (kiri)
+makeChair(-5.6, -0.85, 0);
 const monS = makeMonitor(searchTex, 1.3); monS.position.set(-5.6, 1.62, -2.62); scene.add(monS);
 
 makeDesk(5.6, -2.4, 2.6, 0);                     // RUG (kanan)
+makeChair(5.6, -0.85, 0);
 const monR = makeMonitor(rugTex, 1.3); monR.position.set(5.6, 1.62, -2.62); scene.add(monR);
 
 makeDesk(6.4, 1.6, 2.2, -Math.PI/2);            // EXIT (dekat pintu kanan)
+makeChair(4.85, 1.6, -Math.PI/2);
 const monE = makeMonitor(exitTex, 1.25); monE.position.set(6.4, 1.62, 1.6); monE.rotation.y = -Math.PI/2; scene.add(monE);
 
 /* ----- Radar 3D berputar di meja SEARCH ----- */
@@ -445,8 +448,7 @@ function makeRobot(cfg){
   const mat = (c,r,m) => new THREE.MeshStandardMaterial({ color:c, roughness:r==null?0.65:r, metalness:m==null?0.25:m });
   const bodyMat = mat(0x232a3a), accMat = mat(colInt, 0.45, 0.5);
   const rec = { id:cfg.id, g, inner, blink: 1+Math.random()*4, phase: Math.random()*6.28,
-    area: cfg.area, sitting: cfg.sitting, wanderT: 1+Math.random()*3,
-    target: new THREE.Vector3(), targetRotY: 0, walking:false };
+    sitting: true, target: cfg.home.clone() };
   function leg(x){
     const hip = new THREE.Group(); hip.position.set(x, 0.52, 0); inner.add(hip);
     const th = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.10, 0.5, 12), bodyMat);
@@ -516,13 +518,13 @@ function makeRobot(cfg){
   return rec;
 }
 makeRobot({ id:'head', name:'HEAD', sub:'koordinator • SHADOW MAINNET', color:'#9945FF', labelBorder:'#9945FF',
-  home:new THREE.Vector3(0, 0, -0.85), rotY:Math.PI, sitting:true, area:null });
+  home:new THREE.Vector3(0, 0, -0.85), rotY:Math.PI, sitting:true });
 makeRobot({ id:'search', name:'SEARCH', sub:'pemburu token • pump.fun', color:'#14F195', labelBorder:'#14F195',
-  home:new THREE.Vector3(-4.6, 0, 1.6), area:{minX:-7.4, maxX:-3.6, minZ:0.4, maxZ:3.6} });
+  home:new THREE.Vector3(-5.6, 0, -0.85), rotY:Math.PI, sitting:true });
 makeRobot({ id:'rug', name:'RUG', sub:'risk check • 5 CLEAR', color:'#f87171', labelBorder:'#f87171',
-  home:new THREE.Vector3(1.5, 0, 2.2), area:{minX:-3.5, maxX:3.8, minZ:1.0, maxZ:3.9} });
+  home:new THREE.Vector3(5.6, 0, -0.85), rotY:Math.PI, sitting:true });
 makeRobot({ id:'exit', name:'EXIT', sub:'manajer keluar • TP-SL', color:'#fbbf24', labelBorder:'#fbbf24',
-  home:new THREE.Vector3(5.6, 0, 2.4), area:{minX:4.4, maxX:7.6, minZ:0.6, maxZ:3.4} });
+  home:new THREE.Vector3(4.85, 0, 1.6), rotY:Math.PI/2, sitting:true });
 
 /* ----- Kamera drag/zoom ----- */
 let camTheta = 0.0, camPhi = 1.02, camR = 13.5;
@@ -563,39 +565,12 @@ function animate(){
   const k = 1 - Math.exp(-3.2 * dt);
   for (const id in robots){
     const r = robots[id];
-    if (r.sitting){
-      r.g.position.lerp(r.target, k);
-      r.inner.position.y = 0.07;
-      r.inner.rotation.z = Math.sin(t * 1.3 + r.phase) * 0.03;
-      r.legL.rotation.x = -1.35; r.legR.rotation.x = -1.35; // duduk
-      r.armL.rotation.x = -0.75; r.armR.rotation.x = -0.75; // tangan ke meja
-    } else {
-      r.wanderT -= dt;
-      const dxw = r.target.x - r.g.position.x, dzw = r.target.z - r.g.position.z;
-      const dw = Math.hypot(dxw, dzw);
-      if (r.wanderT <= 0 || dw < 0.4){
-        r.target.set(r.area.minX + Math.random() * (r.area.maxX - r.area.minX), 0,
-                     r.area.minZ + Math.random() * (r.area.maxZ - r.area.minZ));
-        r.wanderT = 4 + Math.random() * 6;
-      }
-      if (dw > 0.3) r.targetRotY = Math.atan2(dxw, dzw);
-      r.walking = dw > 0.35;
-      r.g.position.lerp(r.target, k);
-      let dy = r.targetRotY - r.g.rotation.y;
-      dy = Math.atan2(Math.sin(dy), Math.cos(dy));
-      r.g.rotation.y += dy * k;
-      if (r.walking){
-        const sw = Math.sin(t * 7 + r.phase);
-        r.legL.rotation.x = sw * 0.55; r.legR.rotation.x = -sw * 0.55;
-        r.inner.position.y = Math.abs(sw) * 0.05;
-        r.armL.rotation.x = -sw * 0.4; r.armR.rotation.x = sw * 0.4;
-      } else {
-        r.legL.rotation.x *= 0.9; r.legR.rotation.x *= 0.9;
-        r.inner.position.y *= 0.9;
-        r.armL.rotation.x = 0.1; r.armR.rotation.x = -0.1;
-      }
-      r.inner.rotation.z = Math.sin(t * 1.3 + r.phase) * 0.035;
-    }
+    // Semua robot DUDUK di kursi meja masing-masing, menghadap monitor — tidak berpindah tempat.
+    r.g.position.lerp(r.target, k); // target = posisi kursi (home), lerp ini hanya menahan posisi
+    r.inner.position.y = 0.07 + Math.sin(t * 1.3 + r.phase) * 0.01; // napas halus
+    r.inner.rotation.z = Math.sin(t * 1.3 + r.phase) * 0.03;
+    r.legL.rotation.x = -1.35; r.legR.rotation.x = -1.35; // duduk (kaki menekuk)
+    r.armL.rotation.x = -0.75; r.armR.rotation.x = -0.75; // tangan ke meja
     r.blink -= dt;
     const es = r.blink < 0.12 ? 0.12 : 1;
     if (r.blink <= 0) r.blink = 2 + Math.random() * 4;
