@@ -611,18 +611,19 @@ function drawChart(){
   chTex.needsUpdate = true;
 }
 drawChart();
-function makeMonitor(x, tex, tilt){
+function makeMonitor(x, tex, tilt, big){
   const g = new THREE.Group();
-  const shell = new THREE.Mesh(new THREE.BoxGeometry(1.3,0.85,0.07), M(0x11141b,.5,.4));
+  const sw = big ? 1.8 : 1.3, sh = big ? 1.12 : 0.85;
+  const shell = new THREE.Mesh(new THREE.BoxGeometry(sw,sh,0.07), M(0x11141b,.5,.4));
   shell.castShadow = true; g.add(shell);
-  const scr = new THREE.Mesh(new THREE.PlaneGeometry(1.18,0.73), new THREE.MeshBasicMaterial({ map: tex }));
+  const scr = new THREE.Mesh(new THREE.PlaneGeometry(sw-0.14,sh-0.14), new THREE.MeshBasicMaterial({ map: tex }));
   scr.position.z = 0.037; g.add(scr);
-  const neck = new THREE.Mesh(new THREE.BoxGeometry(0.1,0.32,0.08), M(0x11141b,.5,.4)); neck.position.y = -0.56; g.add(neck);
-  const foot = new THREE.Mesh(new THREE.BoxGeometry(0.5,0.05,0.3), M(0x11141b,.5,.4)); foot.position.y = -0.72; g.add(foot);
-  g.position.set(x, 1.62, -2.55); g.rotation.y = tilt; scene.add(g);
+  const neck = new THREE.Mesh(new THREE.BoxGeometry(0.1,0.32,0.08), M(0x11141b,.5,.4)); neck.position.y = -(sh/2)-0.135; g.add(neck);
+  const foot = new THREE.Mesh(new THREE.BoxGeometry(big ? 0.6 : 0.5,0.05,0.3), M(0x11141b,.5,.4)); foot.position.y = -(sh/2)-0.30; g.add(foot);
+  g.position.set(x, big ? 1.76 : 1.62, -2.55); g.rotation.y = tilt; scene.add(g);
 }
-makeMonitor(-0.85, codeTex, 0.14);
-makeMonitor(0.85, chTex, -0.14);
+makeMonitor(-1.8, codeTex, 0.18);
+makeMonitor(1.8, chTex, -0.18);
 
 /* ----- Tanaman & lampu ----- */
 (function(){
@@ -643,7 +644,6 @@ makeMonitor(0.85, chTex, -0.14);
 })();
 
 /* ================= RUANG TRADING maleyMarginCall ================= */
-const TRX = 6.2, TRZ = 1.6; // pusat ruang trading
 const TRADE = { active:false, pending:false, tp1done:false, side:'BUY', order:'LIMIT', symbol:'XAUUSD', entry:4143, sl:4128, tp1:4166, tp2:4178, price:null, hist:[], lastOk:0 };
 const [tchC, tchX] = mkCanvas(360, 220);
 const tradeChartTex = new THREE.CanvasTexture(tchC);
@@ -790,31 +790,9 @@ async function fetchGoldPrice(){
 }
 fetchGoldPrice();
 setInterval(fetchGoldPrice, 10000);
-/* ----- Geometri ruang trading ----- */
+/* ----- Meja trading gabung di tengah: monitor XAUUSD besar + papan nama ----- */
 (function(){
-  const inlay = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 4.2), M(0x1a1410, 0.95, 0));
-  inlay.rotation.x = -Math.PI/2; inlay.position.set(TRX, 0.015, TRZ); inlay.receiveShadow = true; scene.add(inlay);
-  const edgeM = new THREE.MeshBasicMaterial({ color: 0xfbbf24 });
-  [[0,-2.1,4.6,0.06],[0,2.1,4.6,0.06],[-2.3,0,0.06,4.2],[2.3,0,0.06,4.2]].forEach(([ox,oz,w,d]) => {
-    const e = new THREE.Mesh(new THREE.BoxGeometry(w, 0.025, d), edgeM);
-    e.position.set(TRX+ox, 0.02, TRZ+oz); scene.add(e);
-  });
-  const td = M(0x2b2418, .55, .25);
-  const top = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.1, 1.0), td);
-  top.position.set(TRX, 0.8, TRZ-0.9); top.castShadow = true; top.receiveShadow = true; scene.add(top);
-  [[-1.1,0.25],[1.1,0.25],[-1.1,1.15],[1.1,1.15]].forEach(([lx,lz]) => {
-    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.8, 0.1), td);
-    leg.position.set(TRX+lx, 0.4, lz); leg.castShadow = true; scene.add(leg);
-  });
-  const tch = makeChair(); tch.position.set(TRX, 0, TRZ+0.35);
-  const mg = new THREE.Group();
-  const shell = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.95, 0.07), M(0x11141b,.5,.4));
-  shell.castShadow = true; mg.add(shell);
-  const scr = new THREE.Mesh(new THREE.PlaneGeometry(1.38, 0.83), new THREE.MeshBasicMaterial({ map: tradeChartTex }));
-  scr.position.z = 0.037; mg.add(scr);
-  const neck = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.34, 0.08), M(0x11141b,.5,.4)); neck.position.y = -0.6; mg.add(neck);
-  const foot = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.05, 0.32), M(0x11141b,.5,.4)); foot.position.y = -0.78; mg.add(foot);
-  mg.position.set(TRX, 1.66, TRZ-0.95); scene.add(mg);
+  makeMonitor(0, tradeChartTex, 0, true);
   const [tc, tx] = mkCanvas(1024, 170);
   tx.fillStyle = 'rgba(10,8,4,0.88)'; tx.fillRect(0,0,1024,170);
   tx.strokeStyle = 'rgba(251,191,36,0.55)'; tx.lineWidth = 4; tx.strokeRect(4,4,1016,162);
@@ -823,14 +801,14 @@ setInterval(fetchGoldPrice, 10000);
   tx.fillStyle = grd; tx.textAlign = 'center'; tx.font = 'bold 78px Inter, sans-serif';
   tx.fillText('maleyMarginCall', 512, 98);
   tx.fillStyle = '#fbbf24'; tx.font = '26px Inter, sans-serif';
-  tx.fillText('T R A D I N G   R O O M   •   X A U U S D   L I V E', 512, 140);
+  tx.fillText('T R A D I N G   R O O M   \u2022   X A U U S D   L I V E', 512, 140);
   const sign = new THREE.Mesh(new THREE.PlaneGeometry(3.8, 0.63),
     new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(tc), transparent: true, side: THREE.DoubleSide }));
-  sign.position.set(TRX, 3.0, TRZ-0.9); scene.add(sign);
-  const trLight = new THREE.PointLight(0xfbbf24, 0.55, 7);
-  trLight.position.set(TRX, 2.6, TRZ); scene.add(trLight);
+  sign.position.set(0, 3.1, -2.95); scene.add(sign);
+  const trLight = new THREE.PointLight(0xfbbf24, 0.5, 8);
+  trLight.position.set(0, 2.8, -1.2); scene.add(trLight);
 })();
-/* ================= AKHIR RUANG TRADING ================= */
+/* ================= AKHIR MEJA TRADING ================= */
 
 /* Lampu status global */
 const statusLampMat = new THREE.MeshStandardMaterial({ color:0x111111, emissive:0x34d399, emissiveIntensity:1.2 });
@@ -1122,11 +1100,11 @@ const Office = {
       r.ring.material.color.setHex(a.status === 'paused' ? 0xfbbf24 : 0x6b7280);
       noteDone(r, a);
     });
-    /* ceyper standby di ruang trading maleyMarginCall */
+    /* ceyper di meja tengah, depan monitor XAUUSD besar */
     const ra = robots['ceyper'];
     if (ra){
       const aa = st.agents.find(a => a.id === 'ceyper');
-      ra.target.pos.set(TRX, 0, TRZ+0.35);
+      ra.target.pos.set(-0.44, 0, SEAT_Z);
       ra.target.rotY = Math.PI; ra.target.sitting = true;
       if (aa){ ra.status = aa.status; noteDone(ra, aa); }
       ra.ring.material.color.setHex(0xfbbf24);
@@ -1137,11 +1115,11 @@ const Office = {
       }
       ra.tradeBubble.visible = TRADE.active || TRADE.pending;
     }
-    /* udin duduk di depan monitor tengah (meja utama) */
+    /* udin duduk di depan monitor kode (kiri meja tengah) */
     const ru = robots['udin'];
     if (ru){
       const au = st.agents.find(a => a.id === 'udin');
-      ru.target.pos.set(0.44, 0, SEAT_Z);
+      ru.target.pos.set(-1.32, 0, SEAT_Z);
       ru.target.rotY = Math.PI; ru.target.sitting = true;
       if (au){ ru.status = au.status; noteDone(ru, au); }
       ru.ring.material.color.setHex(ru.status === 'paused' ? 0xfbbf24 : 0x34d399);
@@ -1151,8 +1129,8 @@ const Office = {
     if (rm){
       const am = st.agents.find(a => a.id === 'maley');
       rm.pin = true; rm.target.sitting = false;
-      rm.target.pos.set(TRX-1.7, 0, TRZ+0.9);
-      rm.target.rotY = Math.atan2(1.7, -0.55);
+      rm.target.pos.set(1.15, 0, 0.55);
+      rm.target.rotY = Math.PI;
       if (am){ rm.status = am.status; noteDone(rm, am); }
       rm.ring.material.color.setHex(rm.status === 'paused' ? 0xfbbf24 : 0x6b7280);
     }
