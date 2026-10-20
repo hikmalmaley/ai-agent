@@ -28,6 +28,10 @@ body{background:var(--bg); color:var(--text); font-family:Inter,-apple-system,"S
 #sidebar nav button:hover{background:rgba(255,255,255,.05); color:var(--text)}
 #sidebar nav button.active{background:rgba(91,124,255,.14); color:var(--text)}
 #sidebar nav button .ico{width:20px; text-align:center; flex:0 0 20px}
+#sidebar nav a.navlink{color:var(--muted); text-decoration:none; text-align:left; padding:9px 12px;
+  border-radius:10px; font-size:13.5px; display:flex; align-items:center; gap:10px; width:100%; box-sizing:border-box}
+#sidebar nav a.navlink:hover{background:rgba(20,241,149,.10); color:var(--text)}
+#sidebar nav a.navlink .ico{width:20px; text-align:center; flex:0 0 20px}
 .badge{margin-left:auto; background:var(--accent); color:#fff; font-size:11px; min-width:20px; height:20px;
   border-radius:999px; display:inline-flex; align-items:center; justify-content:center; padding:0 6px; font-weight:600}
 .side-foot{margin-top:auto; padding:10px; color:var(--muted); font-size:11px; border-top:1px solid var(--border)}
@@ -99,6 +103,8 @@ details.sys summary{cursor:pointer; color:var(--muted); font-size:13px; padding:
   #sidebar nav{flex-direction:row; overflow-x:auto; gap:4px; padding-bottom:2px}
   #sidebar nav button{white-space:nowrap; width:auto; padding:8px 10px}
   #sidebar nav button .lbl{display:none}
+  #sidebar nav a.navlink{white-space:nowrap; width:auto; padding:8px 10px}
+  #sidebar nav a.navlink .lbl{display:none}
   .side-foot{display:none}
   #views{padding:12px}
   #topbar{padding:0 12px}
@@ -127,6 +133,7 @@ details.sys summary{cursor:pointer; color:var(--muted); font-size:13px; padding:
     <button data-view="fleet"><span class="ico">🚀</span><span class="lbl">Agent Fleet</span></button>
     <button data-view="log"><span class="ico">📜</span><span class="lbl">Real-Time Log</span></button>
     <button data-view="journal"><span class="ico">📈</span><span class="lbl">Jurnal Trading</span></button>
+    <a class="navlink" href="memecoin-office.html" target="_blank" rel="noopener"><span class="ico">🪙</span><span class="lbl">Memecoin Desk</span><span style="margin-left:auto; font-size:11px; opacity:.7">↗</span></a>
   </nav>
   <div class="side-foot" id="sideFoot">menghubungkan…</div>
 </aside>
