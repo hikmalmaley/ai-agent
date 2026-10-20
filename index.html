@@ -938,7 +938,8 @@ function animateRobots(dt, t){
       const dzw = r.wanderTarget.z - r.g.position.z;
       const dw = Math.hypot(dxw, dzw);
       if (r.wanderT <= 0 || dw < 0.4){
-        r.wanderTarget.set(-3.8 + Math.random()*7.6, 0, 1.2 + Math.random()*3.2);
+        const wx0 = r.patrolWide ? -4.6 : -3.8, wxr = r.patrolWide ? 9.2 : 7.6;
+        r.wanderTarget.set(wx0 + Math.random()*wxr, 0, 1.2 + Math.random()*3.2);
         r.wanderT = 5 + Math.random()*7;
       }
       r.target.pos.copy(r.wanderTarget);
@@ -976,7 +977,7 @@ function animateRobots(dt, t){
     if (r.eyeL){ r.eyeL.scale.y = es; r.eyeR.scale.y = es; }
     const working = r.status === 'working', frozen = r.status === 'paused';
     let aLx=0, aLz=0.14, aRx=0, aRz=-0.14, hX=0, hY=0, hZ=0;
-    if (working && !frozen){
+    if (working && !frozen && !r.walking){
       r.workT += dt; const wt = r.workT;
       if (id === 'ceyper'){ aRx = -0.7 + Math.sin(wt*2.6)*0.35; aRz = Math.cos(wt*2.6)*0.4 - 0.2; aLx = -0.55; hX = 0.18; }
       else if (id === 'udin'){ aLx = -0.85 + Math.sin(wt*11)*0.16; aRx = -0.85 + Math.sin(wt*11+Math.PI)*0.16; hZ = Math.sin(wt*5)*0.07; hX = 0.1; }
@@ -1100,12 +1101,11 @@ const Office = {
       r.ring.material.color.setHex(a.status === 'paused' ? 0xfbbf24 : 0x6b7280);
       noteDone(r, a);
     });
-    /* ceyper di meja tengah, depan monitor XAUUSD besar */
+    /* ceyper patroli: berdiri mengawasi seluruh area kantor */
     const ra = robots['ceyper'];
     if (ra){
       const aa = st.agents.find(a => a.id === 'ceyper');
-      ra.target.pos.set(-0.44, 0, SEAT_Z);
-      ra.target.rotY = Math.PI; ra.target.sitting = true;
+      ra.target.sitting = false; ra.pin = false; ra.patrolWide = true;
       if (aa){ ra.status = aa.status; noteDone(ra, aa); }
       ra.ring.material.color.setHex(0xfbbf24);
       if (!ra.tradeBubble){
@@ -1128,8 +1128,8 @@ const Office = {
     const rm = robots['maley'];
     if (rm){
       const am = st.agents.find(a => a.id === 'maley');
-      rm.pin = true; rm.target.sitting = false;
-      rm.target.pos.set(1.15, 0, 0.55);
+      rm.pin = true; rm.target.sitting = true;
+      rm.target.pos.set(-0.44, 0, SEAT_Z);
       rm.target.rotY = Math.PI;
       if (am){ rm.status = am.status; noteDone(rm, am); }
       rm.ring.material.color.setHex(rm.status === 'paused' ? 0xfbbf24 : 0x6b7280);
