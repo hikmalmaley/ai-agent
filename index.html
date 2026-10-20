@@ -849,7 +849,7 @@ function makeRobot(cfg){
   const inner = new THREE.Group(); g.add(inner);
   const mat = (c,r,m) => new THREE.MeshStandardMaterial({ color:c, roughness:r==null?0.65:r, metalness:m==null?0.25:m });
   const bodyMat = mat(0x2b3242), accMat = mat(colInt, 0.45, 0.5);
-  const rec = { id: cfg.id, g, inner, blink: 1+Math.random()*4, phase: Math.random()*6.28, hop: -1, seen: false, lastDone: null, sitK: 0, workT: 0, status: 'idle', pin: false,
+  const rec = { id: cfg.id, g, inner, blink: 1+Math.random()*4, phase: Math.random()*6.28, hop: -1, seen: false, lastDone: null, sitK: 0, workT: 0, status: 'idle', pin: false, speedMul: 1,
     target: { pos: new THREE.Vector3(), rotY: 0, sitting: false } };
   rec.wanderT = 2 + Math.random()*4;
   rec.wanderTarget = new THREE.Vector3((Math.random()-0.5)*7, 0, 1.5 + Math.random()*2.5);
@@ -930,7 +930,7 @@ const clamp01 = v => Math.max(0, Math.min(1, v));
 function animateRobots(dt, t){
   for (const id in robots){
     const r = robots[id];
-    const k = 1 - Math.exp(-3.2*dt);
+    const k = 1 - Math.exp(-3.2*(r.speedMul||1)*dt);
     // Mondar-mandir: robot yang berdiri (tanpa tugas) jalan santai biar hidup
     if (!r.target.sitting && !r.pin){
       r.wanderT -= dt;
@@ -956,7 +956,7 @@ function animateRobots(dt, t){
     const bend = -1.35 * r.sitK;
     let legL = bend, legR = bend, walkBob = 0;
     if (r.walking){
-      const sw = Math.sin(t*7 + r.phase);
+      const sw = Math.sin(t*7*(r.speedMul||1) + r.phase);
       legL = bend + sw*0.55; legR = bend - sw*0.55;
       walkBob = Math.abs(sw)*0.05;
     }
@@ -983,7 +983,7 @@ function animateRobots(dt, t){
       else if (id === 'udin'){ aLx = -0.85 + Math.sin(wt*11)*0.16; aRx = -0.85 + Math.sin(wt*11+Math.PI)*0.16; hZ = Math.sin(wt*5)*0.07; hX = 0.1; }
       else { aLx = -0.85 + Math.sin(wt*9)*0.16; aRx = -0.85 + Math.sin(wt*9+Math.PI)*0.16; hX = 0.08; hY = Math.sin(wt*0.8)*0.15; }
     } else if (frozen){ aLx = 0.15; aRx = 0.15; hX = 0.28; }
-    else if (r.walking){ const asw = Math.sin(t*7 + r.phase)*0.35; aLx = asw; aRx = -asw; hX = 0.06; }
+    else if (r.walking){ const asw = Math.sin(t*7*(r.speedMul||1) + r.phase)*0.35; aLx = asw; aRx = -asw; hX = 0.06; }
     if (r.hop >= 0){ const he = Math.sin(Math.min(1, r.hop/0.9) * Math.PI); aLz = 0.14 + 2.4*he; aRz = -0.14 - 2.4*he; }
     const ak = 1 - Math.exp(-8*dt);
     r.armL.pivot.rotation.x += (aLx - r.armL.pivot.rotation.x) * ak;
@@ -1105,7 +1105,7 @@ const Office = {
     const ra = robots['ceyper'];
     if (ra){
       const aa = st.agents.find(a => a.id === 'ceyper');
-      ra.target.sitting = false; ra.pin = false; ra.patrolWide = true;
+      ra.target.sitting = false; ra.pin = false; ra.patrolWide = true; ra.speedMul = 0.45;
       if (aa){ ra.status = aa.status; noteDone(ra, aa); }
       ra.ring.material.color.setHex(0xfbbf24);
       if (!ra.tradeBubble){
