@@ -81,16 +81,16 @@ td{padding:6px 4px; border-bottom:1px dashed rgba(255,255,255,.05); vertical-ali
   <aside id="panel">
     <h2>Shadow Mainnet — Gerbang 2</h2>
     <span class="badge safe">TANPA UANG ASLI</span>
-    <div class="snap">Data snapshot: 20 Okt 2026 ~12:34 WIB (run shadow terakhir)</div>
+    <div class="snap" id="snapLine">Data snapshot: 20 Okt 2026 ~12:34 WIB (run shadow terakhir)</div>
     <div class="stats">
-      <div class="stat"><div class="v">24</div><div class="k">Total lead di-scan</div></div>
-      <div class="stat"><div class="v">5</div><div class="k">Lolos RUG (CLEAR)</div></div>
-      <div class="stat"><div class="v">5/5</div><div class="k">Sellable (tes jual balik)</div></div>
-      <div class="stat"><div class="v">3,60%</div><div class="k">Roundtrip loss rata-rata</div></div>
+      <div class="stat"><div class="v" id="statTotal">24</div><div class="k">Total lead di-scan</div></div>
+      <div class="stat"><div class="v" id="statClear">5</div><div class="k">Lolos RUG (CLEAR)</div></div>
+      <div class="stat"><div class="v" id="statSellable">5/5</div><div class="k">Sellable (tes jual balik)</div></div>
+      <div class="stat"><div class="v" id="statAvg">3,60%</div><div class="k">Roundtrip loss rata-rata</div></div>
     </div>
     <table>
       <thead><tr><th>Lead / Mint</th><th>RUG</th><th>Jual?</th><th>Roundtrip</th></tr></thead>
-      <tbody>
+      <tbody id="panelRows">
         <tr>
           <td><span class="mono">LEAD-001</span><br><span class="mono">H6w9Uo…pump</span></td>
           <td><span class="pill clear">CLEAR</span></td>
@@ -123,6 +123,7 @@ td{padding:6px 4px; border-bottom:1px dashed rgba(255,255,255,.05); vertical-ali
         </tr>
       </tbody>
     </table>
+    <p class="note" id="narrativeLine">Narrative (SEARCH-NARRATIVE): 5 kandidat — 0 PASS • 2 WATCH • 3 REJECT. Kandidat PASS otomatis antre RUG + SHADOW.</p>
     <p class="note">CLEAR = mint &amp; freeze authority null (terverifikasi on-chain). Belum termasuk cek konsentrasi holder / LP — sellable &amp; CLEAR <b>bukan</b> jaminan token aman. Quote Jupiter adalah penawaran sesaat (0,01 SOL, slippage 1%, fee simulasi 0,3%), bukan jaminan harga eksekusi.</p>
   </aside>
 </div>
@@ -589,6 +590,79 @@ function animate(){
 }
 animate();
 }
+</script>
+
+<script>
+/* ===== Auto-update panel Memecoin dari memecoin-data.json =====
+   Fetch saat halaman dibuka + tiap 60 detik. Bila fetch gagal,
+   panel tetap menampilkan snapshot statis di atas (tidak diubah). */
+(function(){
+  'use strict';
+  function fmtPct(x){
+    if(x === null || x === undefined || isNaN(x)) return '-';
+    return (Math.round(x * 100) / 100).toFixed(2).replace('.', ',') + '%';
+  }
+  function esc(v){
+    return String(v === null || v === undefined ? '' : v).replace(/[&<>"]/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];
+    });
+  }
+  function fmtWhen(iso){
+    try {
+      var d = new Date(iso);
+      if(isNaN(d.getTime())) return '';
+      return d.toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'}) + ' ' +
+             d.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+    } catch(e){ return ''; }
+  }
+  function apply(d){
+    if(!d) return;
+    var el;
+    el = document.getElementById('snapLine');
+    if(el && d.updated_at) el.textContent = 'Data live: diperbarui ' + fmtWhen(d.updated_at) + ' WIB \u2022 auto-refresh 60 detik';
+    el = document.getElementById('statTotal');
+    if(el && d.total_leads !== null && d.total_leads !== undefined) el.textContent = d.total_leads;
+    el = document.getElementById('statClear');
+    if(el && d.clear_count !== null && d.clear_count !== undefined) el.textContent = d.clear_count;
+    el = document.getElementById('statSellable');
+    if(el && d.sellable_count !== null && d.sellable_count !== undefined && d.checked_count) el.textContent = d.sellable_count + '/' + d.checked_count;
+    el = document.getElementById('statAvg');
+    if(el && d.avg_roundtrip_pct !== null && d.avg_roundtrip_pct !== undefined) el.textContent = fmtPct(d.avg_roundtrip_pct);
+    var tb = document.getElementById('panelRows');
+    if(tb && d.panel_rows && d.panel_rows.length){
+      var html = '';
+      d.panel_rows.forEach(function(r){
+        var tag = '';
+        if(r.is_best) tag = '<span class="tag best">\u2605 likuiditas terbaik</span>';
+        else if(r.qualifying) tag = '<span class="tag best">\u2713 di bawah ambang 2%</span>';
+        var color = '';
+        if(r.is_best) color = ' style="color:var(--solgreen)"';
+        else if(r.roundtrip_loss_pct !== null && r.roundtrip_loss_pct !== undefined && r.roundtrip_loss_pct > 5) color = ' style="color:var(--red)"';
+        html += '<tr><td><span class="mono">' + esc(r.lead_id) + '</span><br><span class="mono">' + esc(r.mint_short) + '</span>' + tag + '</td>'
+              + '<td><span class="pill clear">' + esc(r.rug || 'CLEAR') + '</span></td>'
+              + '<td><span class="pill yes">' + (r.sellable ? 'YA' : 'TIDAK') + '</span></td>'
+              + '<td class="mono"' + color + '>' + fmtPct(r.roundtrip_loss_pct) + '</td></tr>';
+      });
+      tb.innerHTML = html;
+    }
+    var nl = document.getElementById('narrativeLine');
+    if(nl && d.narrative){
+      nl.textContent = 'Narrative (SEARCH-NARRATIVE): ' + d.narrative.total + ' kandidat \u2014 ' + d.narrative.pass + ' PASS \u2022 ' + d.narrative.watch + ' WATCH \u2022 ' + d.narrative.reject + ' REJECT. Kandidat PASS otomatis antre RUG + SHADOW.';
+    }
+    var tt = document.getElementById('tickerTrack');
+    if(tt && d.ticker_items && d.ticker_items.length){
+      tt.innerHTML = d.ticker_items.map(function(t){ return esc(t); }).join(' &nbsp;\u2022&nbsp; ');
+    }
+  }
+  function loadPanel(){
+    fetch('memecoin-data.json', {cache:'no-store'})
+      .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(apply)
+      .catch(function(){ /* fetch gagal: snapshot statis tetap tampil */ });
+  }
+  loadPanel();
+  setInterval(loadPanel, 60000);
+})();
 </script>
 </body>
 </html>
