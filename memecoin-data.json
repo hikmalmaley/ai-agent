@@ -1,22 +1,22 @@
 {
-  "updated_at": "2026-10-21T08:52:38.984526+07:00",
-  "source_shadow_updated_at": "2026-10-21T08:37:37.085600+07:00",
-  "total_leads": 374,
+  "updated_at": "2026-10-21T09:37:27.651804+07:00",
+  "source_shadow_updated_at": "2026-10-21T09:37:15.492921+07:00",
+  "total_leads": 390,
   "clear_count": 89,
   "reject_count": 1,
-  "checked_count": 6,
-  "shadow_seen_total": 70,
-  "sellable_count": 6,
-  "avg_roundtrip_pct": 2.629,
+  "checked_count": 11,
+  "shadow_seen_total": 75,
+  "sellable_count": 10,
+  "avg_roundtrip_pct": 2.7275,
   "best": {
     "lead_id": "LEAD-036",
     "mint": "7oJPrdPWttGaioDiFNcvPi6zPCFJLPN69Cfvfi8wpump",
     "roundtrip_loss_pct": 1.5933
   },
   "worst": {
-    "lead_id": "LEAD-067",
-    "mint": "CRWCzAr2CmHmqfNTFfJFpNVF1jtuw1WMGSnhAL6ypump",
-    "roundtrip_loss_pct": 2.8647
+    "lead_id": "LEAD-076",
+    "mint": "HcWsMgi8Ffmb6bsrQ46YGtuQvqvCytPcdxdgjnuvpump",
+    "roundtrip_loss_pct": 2.9115
   },
   "latest_qualifying": [
     {
@@ -92,9 +92,13 @@
     "LEAD-069 roundtrip 2,83%",
     "LEAD-070 roundtrip 2,83%",
     "LEAD-068 roundtrip 2,85%",
+    "LEAD-073 roundtrip 2,85%",
     "LEAD-067 roundtrip 2,86%",
-    "Rata-rata roundtrip 2,63%",
-    "Sellable 6/6 lead dicek shadow",
+    "LEAD-072 roundtrip 2,87%",
+    "LEAD-074 roundtrip 2,87%",
+    "LEAD-076 roundtrip 2,91%",
+    "Rata-rata roundtrip 2,73%",
+    "Sellable 10/11 lead dicek shadow",
     "Narrative: 0 PASS • 2 WATCH • 3 REJECT",
     "GERBANG 2 • SHADOW MAINNET • TANPA UANG ASLI"
   ]
