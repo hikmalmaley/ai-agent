@@ -1,13 +1,13 @@
 {
-  "updated_at": "2026-10-21T14:45:59.021980+07:00",
-  "source_shadow_updated_at": "2026-10-21T14:45:40.217607+07:00",
-  "total_leads": 450,
-  "clear_count": 109,
+  "updated_at": "2026-10-21T15:37:51.368142+07:00",
+  "source_shadow_updated_at": "2026-10-21T15:37:18.545016+07:00",
+  "total_leads": 457,
+  "clear_count": 114,
   "reject_count": 1,
-  "checked_count": 36,
-  "shadow_seen_total": 100,
-  "sellable_count": 32,
-  "avg_roundtrip_pct": 2.8914,
+  "checked_count": 41,
+  "shadow_seen_total": 105,
+  "sellable_count": 37,
+  "avg_roundtrip_pct": 2.8433,
   "best": {
     "lead_id": "LEAD-095",
     "mint": "AuhAhnNNU6K7p3tBNzcRV5kDPZGF6zhofpfb6sUkpump",
@@ -26,6 +26,14 @@
       "impact_buy_pct": 0.007972847977822389,
       "impact_sell_pct": 0.0,
       "checked_at": "2026-10-21T13:37:18.894214+07:00"
+    },
+    {
+      "lead_id": "LEAD-104",
+      "mint": "Cg9zDsrNUzkm7cUgrXyv5TaKpbH5dpnr4E7pFAZYpump",
+      "roundtrip_loss_pct": 1.4186,
+      "impact_buy_pct": 0.006634977467506896,
+      "impact_sell_pct": 0.004581498923717809,
+      "checked_at": "2026-10-21T15:37:18.545016+07:00"
     },
     {
       "lead_id": "LEAD-077",
@@ -56,6 +64,16 @@
       "qualifying": true
     },
     {
+      "lead_id": "LEAD-104",
+      "mint": "Cg9zDsrNUzkm7cUgrXyv5TaKpbH5dpnr4E7pFAZYpump",
+      "mint_short": "Cg9zDs…pump",
+      "rug": "CLEAR",
+      "sellable": true,
+      "roundtrip_loss_pct": 1.4186,
+      "is_best": false,
+      "qualifying": true
+    },
+    {
       "lead_id": "LEAD-077",
       "mint": "DTLWCWzrmCbSjqRmgmfRN7iQCRwG9bFs6XwAZwM5pump",
       "mint_short": "DTLWCW…pump",
@@ -76,22 +94,12 @@
       "qualifying": true
     },
     {
-      "lead_id": "LEAD-071",
-      "mint": "2qgnTgJbZU6Tu6CMrm5Z5ePDGuUAyGTACbBoBCw6pump",
-      "mint_short": "2qgnTg…pump",
+      "lead_id": "LEAD-102",
+      "mint": "GZSCdvNQ8S3aKnZGhfVa2a9thN9VuQw3QqBD9Rfzpump",
+      "mint_short": "GZSCdv…pump",
       "rug": "CLEAR",
       "sellable": true,
-      "roundtrip_loss_pct": 2.8026,
-      "is_best": false,
-      "qualifying": false
-    },
-    {
-      "lead_id": "LEAD-101",
-      "mint": "GmyPS2NiJR4P7kZUVg93TXzLVzPYgsRozouHwm7qNruE",
-      "mint_short": "GmyPS2…NruE",
-      "rug": "CLEAR",
-      "sellable": true,
-      "roundtrip_loss_pct": 2.8146,
+      "roundtrip_loss_pct": 2.7975,
       "is_best": false,
       "qualifying": false
     }
@@ -104,11 +112,16 @@
   },
   "ticker_items": [
     "LEAD-095 roundtrip 0,98% ✓ di bawah ambang 2%",
+    "LEAD-104 roundtrip 1,42% ✓ di bawah ambang 2%",
     "LEAD-077 roundtrip 1,50% ✓ di bawah ambang 2%",
     "LEAD-036 roundtrip 1,59% ✓ di bawah ambang 2%",
+    "LEAD-102 roundtrip 2,80%",
+    "LEAD-103 roundtrip 2,80%",
     "LEAD-071 roundtrip 2,80%",
     "LEAD-101 roundtrip 2,81%",
     "LEAD-096 roundtrip 2,82%",
+    "LEAD-105 roundtrip 2,83%",
+    "LEAD-106 roundtrip 2,83%",
     "LEAD-069 roundtrip 2,83%",
     "LEAD-094 roundtrip 2,83%",
     "LEAD-083 roundtrip 2,83%",
@@ -135,8 +148,8 @@
     "LEAD-076 roundtrip 2,91%",
     "LEAD-090 roundtrip 2,91%",
     "LEAD-089 roundtrip 8,59%",
-    "Rata-rata roundtrip 2,89%",
-    "Sellable 32/36 lead dicek shadow",
+    "Rata-rata roundtrip 2,84%",
+    "Sellable 37/41 lead dicek shadow",
     "Narrative: 0 PASS • 2 WATCH • 3 REJECT",
     "GERBANG 2 • SHADOW MAINNET • TANPA UANG ASLI"
   ]
