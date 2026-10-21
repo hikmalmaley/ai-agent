@@ -651,7 +651,7 @@ makeMonitor(1.8, chTex, -0.18);
 })();
 
 /* ================= RUANG TRADING maleyMarginCall ================= */
-const TRADE = { active:false, pending:false, tp1done:false, side:'SELL', order:'LIMIT', symbol:'XAUUSD', entry:4128, sl:4143, tp1:4100, tp2:4073, price:null, hist:[], lastOk:0 };
+const TRADE = { active:false, pending:true, tp1done:false, side:'SELL', order:'LIMIT', symbol:'XAUUSD', entry:4155, sl:4170, tp1:4132, tp2:4120, price:null, hist:[], lastOk:0 };
 const [tchC, tchX] = mkCanvas(360, 220);
 const tradeChartTex = new THREE.CanvasTexture(tchC);
 const [tbuC, tbuX] = mkCanvas(512, 300);
